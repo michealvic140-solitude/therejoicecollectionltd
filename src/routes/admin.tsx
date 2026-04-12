@@ -7,6 +7,7 @@ import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminUsers } from "@/components/admin/AdminUsers";
 import { AdminAILogs } from "@/components/admin/AdminAILogs";
 import { AdminSettings } from "@/components/admin/AdminSettings";
+import { AdminMessages } from "@/components/admin/AdminMessages";
 import { Shield } from "lucide-react";
 import { useEffect } from "react";
 
@@ -44,6 +45,7 @@ function AdminPage() {
             <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Products</TabsTrigger>
             <TabsTrigger value="orders" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Orders</TabsTrigger>
             <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Users</TabsTrigger>
+            <TabsTrigger value="messages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Messages</TabsTrigger>
             <TabsTrigger value="ai-logs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">AI Logs</TabsTrigger>
             <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Settings</TabsTrigger>
           </TabsList>
@@ -51,6 +53,7 @@ function AdminPage() {
           <TabsContent value="products"><AdminProducts /></TabsContent>
           <TabsContent value="orders"><AdminOrders /></TabsContent>
           <TabsContent value="users"><AdminUsers /></TabsContent>
+          <TabsContent value="messages"><AdminMessages /></TabsContent>
           <TabsContent value="ai-logs"><AdminAILogs /></TabsContent>
           <TabsContent value="settings"><AdminSettings /></TabsContent>
         </Tabs>
