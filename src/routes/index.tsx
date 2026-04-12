@@ -60,11 +60,8 @@ function Index() {
 
       {/* Hero */}
       <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-background/0 via-background/50 to-background" />
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-20 left-10 w-72 h-72 rounded-full bg-gold/20 blur-[120px]" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 rounded-full bg-gold/10 blur-[150px]" />
-        </div>
+        <img src={heroBg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-30" width={1920} height={1080} />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/60 to-background" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
