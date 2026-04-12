@@ -31,7 +31,7 @@ export function AdminMessages() {
   const fetchMessages = async () => {
     const { data } = await supabase
       .from("messages")
-      .select("*, profiles!messages_user_id_fkey(full_name)")
+      .select("*")
       .order("created_at", { ascending: false })
       .limit(200);
     
