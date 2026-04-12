@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Bot, MessageCircle, Sparkles, TrendingUp, AlertCircle, Star, ThumbsUp, ThumbsDown, Filter } from "lucide-react";
+import { Bot, MessageCircle, Sparkles, Star, Filter, AlertTriangle, ThumbsUp, HelpCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ export function AdminAILogs() {
   const [filter, setFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [recommendations, setRecommendations] = useState<AIRecommendation[]>([]);
+  const [feedbackLogs, setFeedbackLogs] = useState<AILog[]>([]);
+  const [adminQuestions, setAdminQuestions] = useState<AILog[]>([]);
 
   useEffect(() => {
     fetchLogs();
@@ -35,12 +37,14 @@ export function AdminAILogs() {
   const fetchLogs = async () => {
     const { data } = await supabase
       .from("ai_logs")
-      .select("*, profiles(full_name)")
+      .select("*, profiles!ai_logs_user_id_fkey(full_name)")
       .order("created_at", { ascending: false })
-      .limit(200);
+      .limit(500);
     if (data) {
       setLogs(data);
       generateRecommendations(data);
+      setFeedbackLogs(data.filter(l => l.type === "feedback"));
+      setAdminQuestions(data.filter(l => l.type === "ai_admin_question"));
     }
   };
 
@@ -66,6 +70,10 @@ export function AdminAILogs() {
       { key: "suggest", topic: "Product Recommendations" },
       { key: "track", topic: "Order Tracking" },
       { key: "order", topic: "Order Tracking" },
+      { key: "feedback", topic: "User Feedback" },
+      { key: "request", topic: "Feature Requests" },
+      { key: "wish", topic: "Feature Requests" },
+      { key: "want", topic: "Feature Requests" },
     ];
 
     queries.forEach(q => {
@@ -98,6 +106,8 @@ export function AdminAILogs() {
       "Product Quality": "Add customer reviews and authenticity badges to product pages.",
       "Product Recommendations": "Implement AI-powered product recommendations on the homepage.",
       "Order Tracking": "Add real-time order tracking with status notifications.",
+      "User Feedback": "Review user feedback regularly and create action items from common themes.",
+      "Feature Requests": "Prioritize frequently requested features in product roadmap.",
     };
     return suggestions[category] || "Analyze user feedback for actionable improvements.";
   };
@@ -112,16 +122,74 @@ export function AdminAILogs() {
     concierge_query: "border-blue-500/30 text-blue-400",
     concierge_response: "border-green-500/30 text-green-400",
     feedback: "border-gold/30 text-gold",
-    recommendation: "border-purple-500/30 text-purple-400",
+    ai_admin_question: "border-purple-500/30 text-purple-400",
+    recommendation: "border-orange-500/30 text-orange-400",
+  };
+
+  const typeIcons: Record<string, typeof Bot> = {
+    concierge_query: MessageCircle,
+    concierge_response: Bot,
+    feedback: ThumbsUp,
+    ai_admin_question: HelpCircle,
   };
 
   return (
     <div className="space-y-6">
-      {/* AI Recommendations from User Feedback */}
+      {/* AI Questions for Admin */}
+      {adminQuestions.length > 0 && (
+        <div className="glass-card rounded-xl p-6 border border-purple-500/20">
+          <div className="flex items-center gap-2 mb-4">
+            <HelpCircle className="h-6 w-6 text-purple-400" />
+            <h2 className="font-display text-xl font-semibold text-foreground">AI Questions for Admin</h2>
+            <Badge className="bg-purple-500/20 text-purple-400">{adminQuestions.length}</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">The AI Concierge needs your input on these user queries:</p>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {adminQuestions.map(log => (
+              <div key={log.id} className="bg-purple-500/5 border border-purple-500/10 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-purple-400 font-medium">
+                    {log.profiles?.full_name || "Unknown User"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-foreground">{log.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* User Feedback & Recommendations */}
+      {feedbackLogs.length > 0 && (
+        <div className="glass-card rounded-xl p-6 border border-gold/20">
+          <div className="flex items-center gap-2 mb-4">
+            <ThumbsUp className="h-6 w-6 text-gold" />
+            <h2 className="font-display text-xl font-semibold text-foreground">User Feedback & Recommendations</h2>
+            <Badge className="bg-gold/20 text-gold">{feedbackLogs.length}</Badge>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Feedback and suggestions collected from user interactions with the AI:</p>
+          <div className="space-y-3 max-h-64 overflow-y-auto">
+            {feedbackLogs.map(log => (
+              <div key={log.id} className="bg-gold/5 border border-gold/10 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-gold font-medium">
+                    {log.profiles?.full_name || "Unknown User"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                </div>
+                <p className="text-sm text-foreground">{log.message}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* AI Recommendations from patterns */}
       <div className="glass-card rounded-xl p-6">
         <div className="flex items-center gap-2 mb-6">
           <Sparkles className="h-6 w-6 text-gold" />
-          <h2 className="font-display text-2xl font-semibold text-foreground">AI Recommendations</h2>
+          <h2 className="font-display text-2xl font-semibold text-foreground">AI Insights & Recommendations</h2>
         </div>
         <p className="text-sm text-muted-foreground mb-4">
           Based on user interactions with the AI Concierge, here are the top areas that need attention:
@@ -152,12 +220,12 @@ export function AdminAILogs() {
         )}
       </div>
 
-      {/* AI Logs */}
+      {/* Full AI Logs / Audit Trail */}
       <div className="glass-card rounded-xl p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Bot className="h-6 w-6 text-gold" />
-            <h2 className="font-display text-2xl font-semibold text-foreground">AI Logs</h2>
+            <h2 className="font-display text-2xl font-semibold text-foreground">AI Chat & Audit Logs</h2>
             <Badge variant="outline" className="border-gold/30 text-gold ml-2">{logs.length} entries</Badge>
           </div>
           <Button size="sm" variant="outline" className="border-gold/30 text-gold" onClick={fetchLogs}>
@@ -176,8 +244,8 @@ export function AdminAILogs() {
               className="pl-10 bg-secondary border-border"
             />
           </div>
-          <div className="flex gap-2">
-            {["all", "concierge_query", "concierge_response", "feedback"].map(t => (
+          <div className="flex flex-wrap gap-2">
+            {["all", "concierge_query", "concierge_response", "feedback", "ai_admin_question"].map(t => (
               <button
                 key={t}
                 onClick={() => setFilter(t)}
@@ -185,7 +253,7 @@ export function AdminAILogs() {
                   filter === t ? "gradient-gold text-primary-foreground" : "glass text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t.replace("_", " ")}
+                {t === "ai_admin_question" ? "AI Questions" : t.replace(/_/g, " ")}
               </button>
             ))}
           </div>
@@ -193,32 +261,34 @@ export function AdminAILogs() {
 
         {/* Log entries */}
         <div className="space-y-2 max-h-[500px] overflow-y-auto">
-          {filteredLogs.map(log => (
-            <div key={log.id} className="bg-secondary/30 rounded-lg p-3 space-y-1">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {log.type === "concierge_query" ? (
-                    <MessageCircle className="h-4 w-4 text-blue-400" />
-                  ) : log.type === "concierge_response" ? (
-                    <Bot className="h-4 w-4 text-green-400" />
-                  ) : (
-                    <Star className="h-4 w-4 text-gold" />
-                  )}
-                  <Badge variant="outline" className={typeColors[log.type] || "border-border text-muted-foreground"}>
-                    {log.type.replace("_", " ")}
-                  </Badge>
-                  {log.profiles?.full_name && (
-                    <span className="text-xs text-muted-foreground">by {log.profiles.full_name}</span>
-                  )}
+          {filteredLogs.map(log => {
+            const Icon = typeIcons[log.type] || Star;
+            return (
+              <div key={log.id} className="bg-secondary/30 rounded-lg p-3 space-y-1">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Icon className={`h-4 w-4 ${
+                      log.type === "concierge_query" ? "text-blue-400" :
+                      log.type === "concierge_response" ? "text-green-400" :
+                      log.type === "feedback" ? "text-gold" :
+                      log.type === "ai_admin_question" ? "text-purple-400" : "text-muted-foreground"
+                    }`} />
+                    <Badge variant="outline" className={typeColors[log.type] || "border-border text-muted-foreground"}>
+                      {log.type === "ai_admin_question" ? "AI Question" : log.type.replace(/_/g, " ")}
+                    </Badge>
+                    {log.profiles?.full_name && (
+                      <span className="text-xs text-muted-foreground">by {log.profiles.full_name}</span>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                <p className="text-sm text-foreground pl-6">{log.message}</p>
+                {log.metadata && log.type === "concierge_response" && log.metadata.user_query && (
+                  <p className="text-xs text-muted-foreground pl-6 italic">↳ In response to: "{log.metadata.user_query}"</p>
+                )}
               </div>
-              <p className="text-sm text-foreground pl-6">{log.message}</p>
-              {log.metadata && log.type === "concierge_response" && log.metadata.user_query && (
-                <p className="text-xs text-muted-foreground pl-6 italic">↳ In response to: "{log.metadata.user_query}"</p>
-              )}
-            </div>
-          ))}
+            );
+          })}
           {filteredLogs.length === 0 && (
             <div className="text-center py-10 text-muted-foreground">
               <Bot className="h-12 w-12 mx-auto mb-3 opacity-50" />

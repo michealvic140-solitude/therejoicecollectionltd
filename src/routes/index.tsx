@@ -6,7 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
-import { Crown, ArrowRight, ShieldCheck, Truck, HeadphonesIcon, Gift, Sparkles } from "lucide-react";
+import { Crown, ArrowRight, ShieldCheck, Truck, HeadphonesIcon, Gift, Sparkles, Heart, Award, Globe } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 
@@ -123,7 +123,7 @@ function Index() {
         <div className="max-w-6xl mx-auto">
           <h2 className="font-display text-3xl font-bold text-center mb-10 text-gradient-gold">Shop by Category</h2>
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-            {categories.map((cat, i) => (
+            {categories.map((cat) => (
               <Link
                 key={cat.name}
                 to="/shop"
@@ -164,6 +164,80 @@ function Index() {
               <p className="text-muted-foreground">Products coming soon...</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* About Us */}
+      <section className="py-20 px-4">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
+          >
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-gradient-gold mb-4">About Us</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Welcome to The Rejoice Collection — your premier destination for luxury fashion in the Philippines.
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            {[
+              {
+                icon: Heart,
+                title: "Our Story",
+                desc: "Founded with a passion for bringing world-class luxury fashion to the Philippines, The Rejoice Collection curates only the finest pieces from premium brands and independent artisans. Every item is hand-selected for quality, style, and authenticity.",
+              },
+              {
+                icon: Award,
+                title: "Our Promise",
+                desc: "We guarantee 100% authentic products, premium packaging, and exceptional customer service. With our 7-day return policy and dedicated AI Concierge, we ensure every shopping experience is seamless and delightful.",
+              },
+              {
+                icon: Globe,
+                title: "Our Mission",
+                desc: "To make luxury fashion accessible to modern Filipinos. We believe everyone deserves to express themselves through premium quality fashion. From watches to jewelry, bags to footwear — we've got your style covered.",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.15 }}
+                className="glass-card rounded-2xl p-8 text-center"
+              >
+                <div className="h-14 w-14 rounded-full gradient-gold flex items-center justify-center mx-auto mb-5">
+                  <item.icon className="h-7 w-7 text-primary-foreground" />
+                </div>
+                <h3 className="font-display text-xl font-semibold text-foreground mb-3">{item.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="glass-card rounded-2xl p-8 md:p-12 text-center"
+          >
+            <Crown className="h-10 w-10 text-gold mx-auto mb-4" />
+            <h3 className="font-display text-2xl font-bold text-foreground mb-3">Why Choose Us?</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
+              {[
+                { value: "500+", label: "Happy Customers" },
+                { value: "100%", label: "Authentic Products" },
+                { value: "24/7", label: "AI Support" },
+                { value: "₱2K+", label: "Free Shipping" },
+              ].map((stat, i) => (
+                <div key={i}>
+                  <p className="text-2xl sm:text-3xl font-display font-bold text-gradient-gold">{stat.value}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
     </div>
