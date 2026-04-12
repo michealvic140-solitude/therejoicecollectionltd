@@ -2,21 +2,14 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
-import { ShoppingBag, User, Menu, X, Crown, LogOut, Shield, MessageCircle, Lock } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Crown, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export function Header() {
-  const { user, isAdmin, signOut, profile } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
-
-  const navLinks = [
-    { to: "/" as const, label: "Home" },
-    { to: "/shop" as const, label: "Shop" },
-    { to: "/vault" as const, label: "Vault" },
-    { to: "/chat" as const, label: "Chat" },
-  ];
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -24,30 +17,26 @@ export function Header() {
     <header className="sticky top-0 z-50 glass-strong">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
             <Crown className="h-6 w-6 text-gold" />
             <span className="font-display text-xl font-bold text-gradient-gold">TRC</span>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  isActive(link.to)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link to="/" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive("/") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+              Home
+            </Link>
+            <Link to="/shop" search={{}} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive("/shop") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+              Shop
+            </Link>
+            <Link to="/vault" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive("/vault") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+              Vault
+            </Link>
+            <Link to="/chat" className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive("/chat") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
+              Chat
+            </Link>
           </nav>
 
-          {/* Actions */}
           <div className="flex items-center gap-2">
             {user && (
               <Link to="/cart" className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
@@ -89,23 +78,12 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {menuOpen && (
           <nav className="md:hidden py-4 border-t border-border space-y-1">
-            {navLinks.map(link => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMenuOpen(false)}
-                className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(link.to)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link to="/" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Home</Link>
+            <Link to="/shop" search={{}} onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/shop") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Shop</Link>
+            <Link to="/vault" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/vault") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Vault</Link>
+            <Link to="/chat" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/chat") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Chat</Link>
           </nav>
         )}
       </div>
