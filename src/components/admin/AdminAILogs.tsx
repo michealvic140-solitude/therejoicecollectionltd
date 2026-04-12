@@ -37,7 +37,7 @@ export function AdminAILogs() {
   const fetchLogs = async () => {
     const { data } = await supabase
       .from("ai_logs")
-      .select("*, profiles!ai_logs_user_id_fkey(full_name)")
+      .select("*, profiles!ai_logs_user_id_profiles_fkey(full_name)")
       .order("created_at", { ascending: false })
       .limit(500);
     if (data) {
