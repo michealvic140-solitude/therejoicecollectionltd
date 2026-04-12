@@ -54,7 +54,7 @@ function OrdersPage() {
           <div className="text-center py-20 glass-card rounded-2xl">
             <Package className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">No orders yet.</p>
-            <Link to="/shop" className="text-gold hover:underline mt-2 inline-block">Start Shopping</Link>
+            <Link to="/shop" search={{}} className="text-gold hover:underline mt-2 inline-block">Start Shopping</Link>
           </div>
         ) : (
           <div className="space-y-4">

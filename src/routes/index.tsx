@@ -82,7 +82,7 @@ function Index() {
             Discover premium luxury fashion curated for the modern connoisseur. Elevate your style with our exclusive pieces.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-4">
-            <Link to="/shop">
+            <Link to="/shop" search={{}}>
               <Button size="lg" className="gradient-gold text-primary-foreground font-semibold px-8 text-lg">
                 Shop Now <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
@@ -128,7 +128,7 @@ function Index() {
             {categories.map((cat, i) => (
               <Link
                 key={cat.name}
-                to="/shop"
+                to="/shop" search={{}}
                 search={{ category: cat.name.toLowerCase() }}
                 className="glass-card rounded-xl p-4 text-center hover:border-gold/30 transition-all"
               >
@@ -145,7 +145,7 @@ function Index() {
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-between mb-10">
             <h2 className="font-display text-3xl font-bold text-gradient-gold">Featured Products</h2>
-            <Link to="/shop" className="text-gold text-sm font-medium hover:underline flex items-center gap-1">
+            <Link to="/shop" search={{}} className="text-gold text-sm font-medium hover:underline flex items-center gap-1">
               View All <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

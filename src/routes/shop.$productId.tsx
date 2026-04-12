@@ -41,7 +41,7 @@ function ProductDetailPage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-5xl mx-auto">
-        <Link to="/shop" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+        <Link to="/shop" search={{}} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" /> Back to Shop
         </Link>
         <div className="grid md:grid-cols-2 gap-8">

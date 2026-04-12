@@ -58,7 +58,7 @@ function CartPage() {
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <Link to="/shop" className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
+        <Link to="/shop" search={{}} className="inline-flex items-center text-muted-foreground hover:text-foreground mb-6">
           <ArrowLeft className="h-4 w-4 mr-2" /> Continue Shopping
         </Link>
         <h1 className="font-display text-4xl font-bold text-gradient-gold mb-8">Your Cart</h1>
@@ -67,7 +67,7 @@ function CartPage() {
           <div className="text-center py-20 glass-card rounded-2xl">
             <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">Your cart is empty.</p>
-            <Link to="/shop"><Button className="mt-4 gradient-gold text-primary-foreground">Browse Products</Button></Link>
+            <Link to="/shop" search={{}}><Button className="mt-4 gradient-gold text-primary-foreground">Browse Products</Button></Link>
           </div>
         ) : (
           <div className="space-y-4">
