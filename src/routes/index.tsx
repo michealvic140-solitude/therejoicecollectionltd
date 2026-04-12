@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import heroBg from "@/assets/hero-bg.jpg";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useCart } from "@/contexts/CartContext";
