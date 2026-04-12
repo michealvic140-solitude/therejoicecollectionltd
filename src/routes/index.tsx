@@ -128,7 +128,7 @@ function Index() {
             {categories.map((cat, i) => (
               <Link
                 key={cat.name}
-                to="/shop" search={{}}
+                to="/shop"
                 search={{ category: cat.name.toLowerCase() }}
                 className="glass-card rounded-xl p-4 text-center hover:border-gold/30 transition-all"
               >
