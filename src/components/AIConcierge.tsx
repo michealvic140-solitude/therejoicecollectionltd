@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Sparkles, User, Loader2 } from "lucide-react";
+import { X, Send, Sparkles, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
@@ -29,6 +29,14 @@ export function AIConcierge() {
     }
   }, [messages, open]);
 
+  const cleanTags = (text: string) => {
+    return text
+      .replace(/\[ESCALATE_TO_ADMIN\]/g, "")
+      .replace(/\[USER_FEEDBACK\]/g, "")
+      .replace(/\[AI_ASKS_ADMIN\][^\n]*/g, "")
+      .trim();
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     const userMsg: Message = { role: "user", content: input };
@@ -57,6 +65,7 @@ export function AIConcierge() {
         },
         body: JSON.stringify({
           messages: allMessages.map(m => ({ role: m.role, content: m.content })),
+          userId: user?.id || null,
         }),
       });
 
@@ -75,9 +84,9 @@ export function AIConcierge() {
         setMessages(prev => {
           const last = prev[prev.length - 1];
           if (last?.role === "assistant" && prev.length === allMessages.length + 1) {
-            return prev.map((m, i) => i === prev.length - 1 ? { ...m, content } : m);
+            return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: cleanTags(content) } : m);
           }
-          return [...prev, { role: "assistant", content }];
+          return [...prev, { role: "assistant", content: cleanTags(content) }];
         });
       };
 
@@ -109,13 +118,11 @@ export function AIConcierge() {
         }
       }
 
-      // Check for escalation
+      // Handle escalation
       if (assistantContent.includes("[ESCALATE_TO_ADMIN]")) {
-        // Remove the tag from displayed message
-        const cleanContent = assistantContent.replace("[ESCALATE_TO_ADMIN]", "").trim();
-        updateAssistant(cleanContent + "\n\n*I've notified our support team. They'll reach out to you soon!* 🙋");
+        const displayContent = cleanTags(assistantContent) + "\n\n*I've notified our support team. They'll reach out to you soon!* 🙋";
+        updateAssistant(displayContent);
         
-        // Create escalated message in messages table
         if (user) {
           await supabase.from("messages").insert({
             user_id: user.id,
@@ -126,11 +133,42 @@ export function AIConcierge() {
         }
       }
 
+      // Handle user feedback/recommendation
+      if (assistantContent.includes("[USER_FEEDBACK]")) {
+        if (user) {
+          await supabase.from("ai_logs").insert({
+            user_id: user.id,
+            message: input,
+            type: "feedback",
+            metadata: { ai_response: cleanTags(assistantContent) },
+          });
+        }
+      }
+
+      // Handle AI asking admin
+      if (assistantContent.includes("[AI_ASKS_ADMIN]")) {
+        const adminQuestion = assistantContent.split("[AI_ASKS_ADMIN]")[1]?.trim() || "";
+        if (user && adminQuestion) {
+          await supabase.from("messages").insert({
+            user_id: user.id,
+            content: `[AI Question for Admin] Re: "${input}" — AI asks: ${adminQuestion}`,
+            sender: "system",
+            escalated: true,
+          });
+          await supabase.from("ai_logs").insert({
+            user_id: user.id,
+            message: `AI asks admin: ${adminQuestion} (User query: "${input}")`,
+            type: "ai_admin_question",
+            metadata: { user_query: input, admin_question: adminQuestion },
+          });
+        }
+      }
+
       // Log AI response
       if (user) {
         supabase.from("ai_logs").insert({
           user_id: user.id,
-          message: assistantContent.replace("[ESCALATE_TO_ADMIN]", "").trim(),
+          message: cleanTags(assistantContent),
           type: "concierge_response",
           metadata: { user_query: input },
         }).then(() => {});
