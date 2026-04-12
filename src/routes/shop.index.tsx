@@ -10,7 +10,9 @@ import { toast } from "sonner";
 
 const categories = ["all", "watches", "bags", "jewelry", "accessories", "footwear", "clothes", "nightwear", "undies", "trousers", "shirts", "polo", "slippers", "shoes", "glasses", "others"];
 
-export const Route = createFileRoute("/shop")({
+type ShopSearch = { category?: string };
+
+export const Route = createFileRoute("/shop/")({
   component: ShopPage,
   head: () => ({
     meta: [
@@ -18,15 +20,16 @@ export const Route = createFileRoute("/shop")({
       { name: "description", content: "Browse our luxury fashion collection." },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>) => ({
-    category: (search.category as string) || "all",
+  validateSearch: (search: Record<string, unknown>): ShopSearch => ({
+    category: (search.category as string) || undefined,
   }),
 });
 
 function ShopPage() {
   const [products, setProducts] = useState<any[]>([]);
   const [search, setSearch] = useState("");
-  const { category } = Route.useSearch();
+  const searchParams = Route.useSearch();
+  const category = searchParams.category || "all";
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +66,7 @@ function ShopPage() {
             <Link
               key={cat}
               to="/shop"
-              search={{ category: cat }}
+              search={{ category: cat === "all" ? undefined : cat }}
               className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition-all ${
                 category === cat ? "gradient-gold text-primary-foreground" : "glass text-muted-foreground hover:text-foreground"
               }`}
