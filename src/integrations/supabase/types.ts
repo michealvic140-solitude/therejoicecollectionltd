@@ -96,23 +96,32 @@ export type Database = {
       }
       messages: {
         Row: {
+          admin_reply: string | null
           content: string
           created_at: string
+          escalated: boolean | null
           id: string
+          replied_at: string | null
           sender: string
           user_id: string
         }
         Insert: {
+          admin_reply?: string | null
           content: string
           created_at?: string
+          escalated?: boolean | null
           id?: string
+          replied_at?: string | null
           sender?: string
           user_id: string
         }
         Update: {
+          admin_reply?: string | null
           content?: string
           created_at?: string
+          escalated?: boolean | null
           id?: string
+          replied_at?: string | null
           sender?: string
           user_id?: string
         }
