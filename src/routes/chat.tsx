@@ -18,7 +18,7 @@ export const Route = createFileRoute("/chat")({
 });
 
 function ChatPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [input, setInput] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -34,9 +34,8 @@ function ChatPage() {
   };
 
   useEffect(() => {
-    fetchMessages();
-    // Set up realtime subscription
     if (!user) return;
+    fetchMessages();
     const channel = supabase
       .channel('user-messages')
       .on('postgres_changes', {
@@ -65,6 +64,15 @@ function ChatPage() {
     setInput("");
     fetchMessages();
   };
+
+  // Show loading state while auth is initializing - don't redirect to login
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-muted-foreground">Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

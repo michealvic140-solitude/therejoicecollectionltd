@@ -4,10 +4,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminOrders } from "@/components/admin/AdminOrders";
+import { AdminPayments } from "@/components/admin/AdminPayments";
+import { AdminTracking } from "@/components/admin/AdminTracking";
 import { AdminUsers } from "@/components/admin/AdminUsers";
+import { AdminNegotiations } from "@/components/admin/AdminNegotiations";
+import { AdminRefunds } from "@/components/admin/AdminRefunds";
+import { AdminPromoCodes } from "@/components/admin/AdminPromoCodes";
+import { AdminCoupons } from "@/components/admin/AdminCoupons";
+import { AdminEvents } from "@/components/admin/AdminEvents";
+import { AdminSpinWheels } from "@/components/admin/AdminSpinWheels";
+import { AdminPopupAds } from "@/components/admin/AdminPopupAds";
+import { AdminCategoryDiscounts } from "@/components/admin/AdminCategoryDiscounts";
+import { AdminAnnouncements } from "@/components/admin/AdminAnnouncements";
+import { AdminMessages } from "@/components/admin/AdminMessages";
 import { AdminAILogs } from "@/components/admin/AdminAILogs";
 import { AdminSettings } from "@/components/admin/AdminSettings";
-import { AdminMessages } from "@/components/admin/AdminMessages";
 import { Shield } from "lucide-react";
 import { useEffect } from "react";
 
@@ -32,6 +43,27 @@ function AdminPage() {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="text-muted-foreground">Loading...</div></div>;
   if (!isAdmin) return null;
 
+  const tabs = [
+    { value: "overview", label: "Overview", component: <AdminOverview /> },
+    { value: "products", label: "Products", component: <AdminProducts /> },
+    { value: "orders", label: "Orders", component: <AdminOrders /> },
+    { value: "payments", label: "Payments", component: <AdminPayments /> },
+    { value: "tracking", label: "Tracking", component: <AdminTracking /> },
+    { value: "users", label: "Users", component: <AdminUsers /> },
+    { value: "negotiations", label: "Negotiations", component: <AdminNegotiations /> },
+    { value: "refunds", label: "Refunds", component: <AdminRefunds /> },
+    { value: "promo-codes", label: "Promo Codes", component: <AdminPromoCodes /> },
+    { value: "coupons", label: "Coupons", component: <AdminCoupons /> },
+    { value: "events", label: "Events", component: <AdminEvents /> },
+    { value: "spin-wheel", label: "Spin Wheel", component: <AdminSpinWheels /> },
+    { value: "popup-ads", label: "Popup Ads", component: <AdminPopupAds /> },
+    { value: "category-discounts", label: "Category Discounts", component: <AdminCategoryDiscounts /> },
+    { value: "announcements", label: "Announcements", component: <AdminAnnouncements /> },
+    { value: "chats", label: "Chats", component: <AdminMessages /> },
+    { value: "ai-logs", label: "AI Logs", component: <AdminAILogs /> },
+    { value: "settings", label: "Settings", component: <AdminSettings /> },
+  ];
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -41,21 +73,15 @@ function AdminPage() {
         </div>
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="flex flex-wrap gap-1 bg-secondary/50 p-1 rounded-xl h-auto">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Overview</TabsTrigger>
-            <TabsTrigger value="products" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Products</TabsTrigger>
-            <TabsTrigger value="orders" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Orders</TabsTrigger>
-            <TabsTrigger value="users" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Users</TabsTrigger>
-            <TabsTrigger value="messages" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Messages</TabsTrigger>
-            <TabsTrigger value="ai-logs" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">AI Logs</TabsTrigger>
-            <TabsTrigger value="settings" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">Settings</TabsTrigger>
+            {tabs.map(t => (
+              <TabsTrigger key={t.value} value={t.value} className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs sm:text-sm">
+                {t.label}
+              </TabsTrigger>
+            ))}
           </TabsList>
-          <TabsContent value="overview"><AdminOverview /></TabsContent>
-          <TabsContent value="products"><AdminProducts /></TabsContent>
-          <TabsContent value="orders"><AdminOrders /></TabsContent>
-          <TabsContent value="users"><AdminUsers /></TabsContent>
-          <TabsContent value="messages"><AdminMessages /></TabsContent>
-          <TabsContent value="ai-logs"><AdminAILogs /></TabsContent>
-          <TabsContent value="settings"><AdminSettings /></TabsContent>
+          {tabs.map(t => (
+            <TabsContent key={t.value} value={t.value}>{t.component}</TabsContent>
+          ))}
         </Tabs>
       </div>
     </div>
