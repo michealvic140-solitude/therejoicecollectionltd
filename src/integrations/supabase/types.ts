@@ -431,8 +431,20 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          date_of_birth: string | null
+          delivery_address: string | null
+          delivery_landmarks: string | null
+          delivery_lga: string | null
+          delivery_state: string | null
+          first_name: string | null
           full_name: string | null
+          home_address: string | null
           id: string
+          last_name: string | null
+          lga: string | null
+          middle_name: string | null
+          phone: string | null
+          state: string | null
           status: string | null
           updated_at: string
           user_id: string
@@ -440,8 +452,20 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          delivery_address?: string | null
+          delivery_landmarks?: string | null
+          delivery_lga?: string | null
+          delivery_state?: string | null
+          first_name?: string | null
           full_name?: string | null
+          home_address?: string | null
           id?: string
+          last_name?: string | null
+          lga?: string | null
+          middle_name?: string | null
+          phone?: string | null
+          state?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
@@ -449,8 +473,20 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          delivery_address?: string | null
+          delivery_landmarks?: string | null
+          delivery_lga?: string | null
+          delivery_state?: string | null
+          first_name?: string | null
           full_name?: string | null
+          home_address?: string | null
           id?: string
+          last_name?: string | null
+          lga?: string | null
+          middle_name?: string | null
+          phone?: string | null
+          state?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
