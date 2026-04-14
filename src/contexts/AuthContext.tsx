@@ -6,6 +6,18 @@ interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
+  first_name: string | null;
+  middle_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  date_of_birth: string | null;
+  state: string | null;
+  lga: string | null;
+  home_address: string | null;
+  delivery_state: string | null;
+  delivery_lga: string | null;
+  delivery_landmarks: string | null;
+  delivery_address: string | null;
   avatar_url: string | null;
   status: string | null;
   created_at: string;
@@ -17,7 +29,7 @@ interface AuthContextType {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, meta?: Record<string, string>) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -38,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .select("*")
       .eq("user_id", userId)
       .single();
-    setProfile(profileData);
+    setProfile(profileData as any);
 
     const { data: roleData } = await supabase
       .from("user_roles")
@@ -54,12 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // Set up listener FIRST, then get session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
-          await fetchProfile(session.user.id);
+          // Fire and forget - no await in callback
+          fetchProfile(session.user.id);
         } else {
           setProfile(null);
           setIsAdmin(false);
@@ -76,10 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, meta?: Record<string, string>) => {
     const { error } = await supabase.auth.signUp({
       email, password,
-      options: { data: { full_name: fullName }, emailRedirectTo: window.location.origin }
+      options: {
+        data: { full_name: fullName, ...meta },
+        emailRedirectTo: window.location.origin,
+      },
     });
     return { error };
   };
