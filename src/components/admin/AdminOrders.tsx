@@ -27,7 +27,7 @@ export function AdminOrders() {
               <p className="text-sm text-muted-foreground">{order.profiles?.full_name || "Unknown"}</p>
             </div>
             <div className="text-right">
-              <p className="font-bold text-gold">₱{order.total?.toLocaleString()}</p>
+              <p className="font-bold text-gold">₦{order.total?.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</p>
             </div>
           </div>

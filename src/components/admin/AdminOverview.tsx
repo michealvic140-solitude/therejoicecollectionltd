@@ -56,7 +56,7 @@ export function AdminOverview() {
     { icon: Package, label: "Products", value: stats.products },
     { icon: ShoppingBag, label: "Orders", value: stats.orders },
     { icon: Users, label: "Users", value: stats.users },
-    { icon: DollarSign, label: "Revenue", value: `₱${stats.revenue.toLocaleString()}` },
+    { icon: DollarSign, label: "Revenue", value: `₦${stats.revenue.toLocaleString()}` },
     { icon: Bot, label: "AI Chats", value: stats.aiLogs },
     { icon: MessageCircle, label: "Messages", value: stats.messages },
     { icon: AlertTriangle, label: "Escalated", value: stats.escalated },
