@@ -82,7 +82,7 @@ export function AdminProducts() {
               {p.image_url && <img src={p.image_url} alt="" className="w-12 h-12 rounded-lg object-cover" />}
               <div>
                 <p className="font-semibold text-foreground">{p.name}</p>
-                <p className="text-sm text-muted-foreground">₱{p.price} · {p.category}{p.vault ? " · 🔒 Vault" : ""}</p>
+                <p className="text-sm text-muted-foreground">₦{p.price} · {p.category}{p.vault ? " · 🔒 Vault" : ""}</p>
               </div>
             </div>
             <div className="flex gap-2">

@@ -60,9 +60,9 @@ function ProductDetailPage() {
             )}
             <h1 className="font-display text-4xl font-bold text-foreground">{product.name}</h1>
             <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-gold">₱{product.price.toLocaleString()}</span>
+              <span className="text-3xl font-bold text-gold">₦{product.price.toLocaleString()}</span>
               {product.original_price && product.original_price > product.price && (
-                <span className="text-lg text-muted-foreground line-through">₱{product.original_price.toLocaleString()}</span>
+                <span className="text-lg text-muted-foreground line-through">₦{product.original_price.toLocaleString()}</span>
               )}
             </div>
             {product.description && (
