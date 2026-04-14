@@ -69,7 +69,7 @@ function OrdersPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Order #{order.id.slice(0, 8)}</span>
-                  <span className="font-display text-xl font-bold text-gold">₱{order.total?.toLocaleString()}</span>
+                  <span className="font-display text-xl font-bold text-gold">₦{order.total?.toLocaleString()}</span>
                 </div>
                 {order.items && Array.isArray(order.items) && (
                   <p className="text-xs text-muted-foreground">{order.items.length} item(s)</p>

@@ -84,14 +84,14 @@ function CartPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground truncate">{item.product?.name}</h3>
-                  <p className="text-gold font-bold">₱{(item.product?.price || 0).toLocaleString()}</p>
+                  <p className="text-gold font-bold">₦{(item.product?.price || 0).toLocaleString()}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => updateQuantity(item.product_id, item.quantity - 1)} className="p-1 rounded hover:bg-secondary"><Minus className="h-4 w-4" /></button>
                   <span className="w-8 text-center font-medium">{item.quantity}</span>
                   <button onClick={() => updateQuantity(item.product_id, item.quantity + 1)} className="p-1 rounded hover:bg-secondary"><Plus className="h-4 w-4" /></button>
                 </div>
-                <p className="font-bold text-foreground w-24 text-right">₱{((item.product?.price || 0) * item.quantity).toLocaleString()}</p>
+                <p className="font-bold text-foreground w-24 text-right">₦{((item.product?.price || 0) * item.quantity).toLocaleString()}</p>
                 <button onClick={() => removeFromCart(item.product_id)} className="p-2 rounded hover:bg-destructive/10 text-destructive">
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -101,7 +101,7 @@ function CartPage() {
             <div className="glass-card rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between text-lg">
                 <span className="text-muted-foreground">Total ({itemCount} items)</span>
-                <span className="font-display text-2xl font-bold text-gold">₱{total.toLocaleString()}</span>
+                <span className="font-display text-2xl font-bold text-gold">₦{total.toLocaleString()}</span>
               </div>
               <Button size="lg" className="w-full gradient-gold text-primary-foreground font-semibold text-lg" onClick={placeOrder} disabled={placing}>
                 {placing ? "Placing Order..." : "Place Order"}

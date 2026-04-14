@@ -178,7 +178,7 @@ function Index() {
           >
             <h2 className="font-display text-3xl sm:text-4xl font-bold text-gradient-gold mb-4">About Us</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Welcome to The Rejoice Collection — your premier destination for luxury fashion in the Philippines.
+              Welcome to The Rejoice Collection — your premier destination for luxury fashion in Nigeria.
             </p>
           </motion.div>
 
@@ -187,7 +187,7 @@ function Index() {
               {
                 icon: Heart,
                 title: "Our Story",
-                desc: "Founded with a passion for bringing world-class luxury fashion to the Philippines, The Rejoice Collection curates only the finest pieces from premium brands and independent artisans. Every item is hand-selected for quality, style, and authenticity.",
+                desc: "Founded with a passion for bringing world-class luxury fashion to Nigeria, The Rejoice Collection curates only the finest pieces from premium brands and independent artisans. Every item is hand-selected for quality, style, and authenticity.",
               },
               {
                 icon: Award,
@@ -197,7 +197,7 @@ function Index() {
               {
                 icon: Globe,
                 title: "Our Mission",
-                desc: "To make luxury fashion accessible to modern Filipinos. We believe everyone deserves to express themselves through premium quality fashion. From watches to jewelry, bags to footwear — we've got your style covered.",
+                desc: "To make luxury fashion accessible to modern Nigerians. We believe everyone deserves to express themselves through premium quality fashion. From watches to jewelry, bags to footwear — we've got your style covered.",
               },
             ].map((item, i) => (
               <motion.div
@@ -229,7 +229,7 @@ function Index() {
                 { value: "500+", label: "Happy Customers" },
                 { value: "100%", label: "Authentic Products" },
                 { value: "24/7", label: "AI Support" },
-                { value: "₱2K+", label: "Free Shipping" },
+                { value: "₦50K+", label: "Free Shipping" },
               ].map((stat, i) => (
                 <div key={i}>
                   <p className="text-2xl sm:text-3xl font-display font-bold text-gradient-gold">{stat.value}</p>
