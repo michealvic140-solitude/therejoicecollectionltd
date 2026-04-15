@@ -16,7 +16,7 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-concierge
 export function AIConcierge() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Welcome to **The Rejoice Collection**! 👋 I'm your AI Concierge — I can help with anything: product questions, orders, platform guidance, or even general questions. How can I help you today?" }
+    { role: "assistant", content: "Welcome to **The Rejoice Collection**! 👋 I'm your AI Concierge — I can help with anything: product questions, orders, payments, tracking, platform guidance, or even general questions. How can I help you today?" }
   ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,12 +34,110 @@ export function AIConcierge() {
       .replace(/\[ESCALATE_TO_ADMIN\]/g, "")
       .replace(/\[USER_FEEDBACK\]/g, "")
       .replace(/\[AI_ASKS_ADMIN\][^\n]*/g, "")
+      .replace(/\[CANCEL_ORDER:[^\]]*\]/g, "")
+      .replace(/\[REQUEST_REFUND:[^\]]*\]/g, "")
       .trim();
+  };
+
+  const handleActions = async (content: string, userQuery: string) => {
+    if (!user) return;
+
+    // Handle order cancellation
+    const cancelMatch = content.match(/\[CANCEL_ORDER:([^\]]+)\]/);
+    if (cancelMatch) {
+      const orderId = cancelMatch[1].trim();
+      const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("user_id", user.id);
+      if (!error) {
+        // Log the action
+        await supabase.from("ai_logs").insert({
+          user_id: user.id,
+          message: `AI cancelled order #${orderId.slice(0, 8)} per user request. User said: "${userQuery}"`,
+          type: "ai_action",
+          metadata: { action: "cancel_order", order_id: orderId },
+        });
+        // Notify admin
+        await supabase.from("messages").insert({
+          user_id: user.id,
+          content: `[AI Action] Cancelled order #${orderId.slice(0, 8)} per user request. User said: "${userQuery}"`,
+          sender: "system",
+          escalated: true,
+        });
+      }
+    }
+
+    // Handle refund request
+    const refundMatch = content.match(/\[REQUEST_REFUND:([^:]+):([^:]+):([^\]]+)\]/);
+    if (refundMatch) {
+      const orderId = refundMatch[1].trim();
+      const amount = parseFloat(refundMatch[2].trim());
+      const reason = refundMatch[3].trim();
+      const { error } = await supabase.from("refunds").insert({
+        user_id: user.id,
+        order_id: orderId,
+        amount: amount,
+        reason: reason,
+        status: "pending",
+      });
+      if (!error) {
+        await supabase.from("ai_logs").insert({
+          user_id: user.id,
+          message: `AI submitted refund request for order #${orderId.slice(0, 8)} — ₦${amount.toLocaleString()} — Reason: ${reason}`,
+          type: "ai_action",
+          metadata: { action: "request_refund", order_id: orderId, amount, reason },
+        });
+        await supabase.from("messages").insert({
+          user_id: user.id,
+          content: `[AI Action] Submitted refund request for order #${orderId.slice(0, 8)} — ₦${amount.toLocaleString()} — Reason: ${reason}`,
+          sender: "system",
+          escalated: true,
+        });
+      }
+    }
+
+    // Handle escalation
+    if (content.includes("[ESCALATE_TO_ADMIN]")) {
+      await supabase.from("messages").insert({
+        user_id: user.id,
+        content: `[AI Escalation] User asked: "${userQuery}" — AI suggested escalation.`,
+        sender: "system",
+        escalated: true,
+      });
+    }
+
+    // Handle user feedback
+    if (content.includes("[USER_FEEDBACK]")) {
+      await supabase.from("ai_logs").insert({
+        user_id: user.id,
+        message: userQuery,
+        type: "feedback",
+        metadata: { ai_response: cleanTags(content) },
+      });
+    }
+
+    // Handle AI asking admin
+    if (content.includes("[AI_ASKS_ADMIN]")) {
+      const adminQuestion = content.split("[AI_ASKS_ADMIN]")[1]?.trim() || "";
+      if (adminQuestion) {
+        await supabase.from("messages").insert({
+          user_id: user.id,
+          content: `[AI Question for Admin] Re: "${userQuery}" — AI asks: ${adminQuestion}`,
+          sender: "system",
+          escalated: true,
+        });
+        await supabase.from("ai_logs").insert({
+          user_id: user.id,
+          message: `AI asks admin: ${adminQuestion} (User query: "${userQuery}")`,
+          type: "ai_admin_question",
+          metadata: { user_query: userQuery, admin_question: adminQuestion },
+        });
+      }
+    }
   };
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
     const userMsg: Message = { role: "user", content: input };
+    const userQuery = input;
     const allMessages = [...messages, userMsg];
     setMessages(allMessages);
     setInput("");
@@ -49,7 +147,7 @@ export function AIConcierge() {
     if (user) {
       supabase.from("ai_logs").insert({
         user_id: user.id,
-        message: input,
+        message: userQuery,
         type: "concierge_query",
       }).then(() => {});
     }
@@ -118,51 +216,14 @@ export function AIConcierge() {
         }
       }
 
-      // Handle escalation
+      // Show escalation message
       if (assistantContent.includes("[ESCALATE_TO_ADMIN]")) {
         const displayContent = cleanTags(assistantContent) + "\n\n*I've notified our support team. They'll reach out to you soon!* 🙋";
         updateAssistant(displayContent);
-        
-        if (user) {
-          await supabase.from("messages").insert({
-            user_id: user.id,
-            content: `[AI Escalation] User asked: "${input}" — AI suggested escalation.`,
-            sender: "system",
-            escalated: true,
-          });
-        }
       }
 
-      // Handle user feedback/recommendation
-      if (assistantContent.includes("[USER_FEEDBACK]")) {
-        if (user) {
-          await supabase.from("ai_logs").insert({
-            user_id: user.id,
-            message: input,
-            type: "feedback",
-            metadata: { ai_response: cleanTags(assistantContent) },
-          });
-        }
-      }
-
-      // Handle AI asking admin
-      if (assistantContent.includes("[AI_ASKS_ADMIN]")) {
-        const adminQuestion = assistantContent.split("[AI_ASKS_ADMIN]")[1]?.trim() || "";
-        if (user && adminQuestion) {
-          await supabase.from("messages").insert({
-            user_id: user.id,
-            content: `[AI Question for Admin] Re: "${input}" — AI asks: ${adminQuestion}`,
-            sender: "system",
-            escalated: true,
-          });
-          await supabase.from("ai_logs").insert({
-            user_id: user.id,
-            message: `AI asks admin: ${adminQuestion} (User query: "${input}")`,
-            type: "ai_admin_question",
-            metadata: { user_query: input, admin_question: adminQuestion },
-          });
-        }
-      }
+      // Handle all AI actions (cancel, refund, escalate, feedback, admin question)
+      await handleActions(assistantContent, userQuery);
 
       // Log AI response
       if (user) {
@@ -170,7 +231,7 @@ export function AIConcierge() {
           user_id: user.id,
           message: cleanTags(assistantContent),
           type: "concierge_response",
-          metadata: { user_query: input },
+          metadata: { user_query: userQuery },
         }).then(() => {});
       }
     } catch (e: any) {
