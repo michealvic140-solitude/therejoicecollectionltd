@@ -59,7 +59,7 @@ function AdminPage() {
     { value: "popup-ads", label: "Popup Ads", component: <AdminPopupAds /> },
     { value: "category-discounts", label: "Category Discounts", component: <AdminCategoryDiscounts /> },
     { value: "announcements", label: "Announcements", component: <AdminAnnouncements /> },
-    { value: "chats", label: "Chats", component: <AdminMessages /> },
+    { value: "chats", label: "Chats", component: <AdminChats /> },
     { value: "ai-logs", label: "AI Logs", component: <AdminAILogs /> },
     { value: "settings", label: "Settings", component: <AdminSettings /> },
   ];
