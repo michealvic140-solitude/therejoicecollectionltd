@@ -16,7 +16,7 @@ import { AdminSpinWheels } from "@/components/admin/AdminSpinWheels";
 import { AdminPopupAds } from "@/components/admin/AdminPopupAds";
 import { AdminCategoryDiscounts } from "@/components/admin/AdminCategoryDiscounts";
 import { AdminAnnouncements } from "@/components/admin/AdminAnnouncements";
-import { AdminMessages } from "@/components/admin/AdminMessages";
+import { AdminChats } from "@/components/admin/AdminChats";
 import { AdminAILogs } from "@/components/admin/AdminAILogs";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { Shield } from "lucide-react";
