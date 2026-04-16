@@ -52,21 +52,33 @@ export type Database = {
       announcements: {
         Row: {
           active: boolean | null
+          content: string | null
           created_at: string
           id: string
+          image_url: string | null
           message: string
+          tag: string | null
+          title: string | null
         }
         Insert: {
           active?: boolean | null
+          content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           message: string
+          tag?: string | null
+          title?: string | null
         }
         Update: {
           active?: boolean | null
+          content?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           message?: string
+          tag?: string | null
+          title?: string | null
         }
         Relationships: []
       }
@@ -108,6 +120,7 @@ export type Database = {
           category: string
           created_at: string
           discount_percent: number
+          ends_at: string | null
           id: string
         }
         Insert: {
@@ -115,6 +128,7 @@ export type Database = {
           category: string
           created_at?: string
           discount_percent?: number
+          ends_at?: string | null
           id?: string
         }
         Update: {
@@ -122,7 +136,35 @@ export type Database = {
           category?: string
           created_at?: string
           discount_percent?: number
+          ends_at?: string | null
           id?: string
+        }
+        Relationships: []
+      }
+      chats: {
+        Row: {
+          created_at: string
+          id: string
+          is_admin: boolean
+          is_system: boolean
+          message: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          is_system?: boolean
+          message?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_admin?: boolean
+          is_system?: boolean
+          message?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -171,8 +213,10 @@ export type Database = {
           created_at: string
           description: string | null
           end_date: string | null
+          ends_at: string | null
           id: string
           image_url: string | null
+          promo_code: string | null
           start_date: string | null
           title: string
         }
@@ -181,8 +225,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          ends_at?: string | null
           id?: string
           image_url?: string | null
+          promo_code?: string | null
           start_date?: string | null
           title: string
         }
@@ -191,8 +237,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           end_date?: string | null
+          ends_at?: string | null
           id?: string
           image_url?: string | null
+          promo_code?: string | null
           start_date?: string | null
           title?: string
         }
@@ -275,30 +323,125 @@ export type Database = {
           },
         ]
       }
-      orders: {
+      notifications: {
         Row: {
           created_at: string
           id: string
-          items: Json | null
-          status: string
-          total: number
+          link: string | null
+          message: string
+          read: boolean
+          title: string
+          type: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          items?: Json | null
-          status?: string
-          total?: number
+          link?: string | null
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          link?: string | null
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      order_tracking: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_tracking_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          cancellation_reason: string | null
+          created_at: string
+          delivery_address: string | null
+          delivery_city: string | null
+          delivery_method: string | null
+          delivery_state: string | null
+          id: string
+          items: Json | null
+          payment_method: string | null
+          pickup_location: string | null
+          refund_status: string | null
+          screenshot_url: string | null
+          status: string
+          total: number
+          user_id: string
+          user_name: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          created_at?: string
+          delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_method?: string | null
+          delivery_state?: string | null
+          id?: string
           items?: Json | null
+          payment_method?: string | null
+          pickup_location?: string | null
+          refund_status?: string | null
+          screenshot_url?: string | null
+          status?: string
+          total?: number
+          user_id: string
+          user_name?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          created_at?: string
+          delivery_address?: string | null
+          delivery_city?: string | null
+          delivery_method?: string | null
+          delivery_state?: string | null
+          id?: string
+          items?: Json | null
+          payment_method?: string | null
+          pickup_location?: string | null
+          refund_status?: string | null
+          screenshot_url?: string | null
           status?: string
           total?: number
           user_id?: string
+          user_name?: string | null
         }
         Relationships: []
       }
@@ -357,8 +500,12 @@ export type Database = {
           active: boolean
           content: string | null
           created_at: string
+          description: string | null
+          discount_percent: number | null
           id: string
           image_url: string | null
+          link_id: string | null
+          link_type: string | null
           link_url: string | null
           show_on_pages: string[] | null
           title: string
@@ -367,8 +514,12 @@ export type Database = {
           active?: boolean
           content?: string | null
           created_at?: string
+          description?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
+          link_id?: string | null
+          link_type?: string | null
           link_url?: string | null
           show_on_pages?: string[] | null
           title: string
@@ -377,8 +528,12 @@ export type Database = {
           active?: boolean
           content?: string | null
           created_at?: string
+          description?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
+          link_id?: string | null
+          link_type?: string | null
           link_url?: string | null
           show_on_pages?: string[] | null
           title?: string
@@ -390,11 +545,15 @@ export type Database = {
           category: string | null
           created_at: string
           description: string | null
+          discount_ends_at: string | null
+          discount_percent: number | null
           id: string
           image_url: string | null
           name: string
           original_price: number | null
+          out_of_stock: boolean | null
           price: number
+          shipping: boolean | null
           stock: number | null
           vault: boolean | null
           visible: boolean | null
@@ -403,11 +562,15 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          discount_ends_at?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
           name: string
           original_price?: number | null
+          out_of_stock?: boolean | null
           price?: number
+          shipping?: boolean | null
           stock?: number | null
           vault?: boolean | null
           visible?: boolean | null
@@ -416,11 +579,15 @@ export type Database = {
           category?: string | null
           created_at?: string
           description?: string | null
+          discount_ends_at?: string | null
+          discount_percent?: number | null
           id?: string
           image_url?: string | null
           name?: string
           original_price?: number | null
+          out_of_stock?: boolean | null
           price?: number
+          shipping?: boolean | null
           stock?: number | null
           vault?: boolean | null
           visible?: boolean | null
@@ -429,67 +596,91 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
+          badge: string | null
+          city: string | null
           created_at: string
           date_of_birth: string | null
           delivery_address: string | null
           delivery_landmarks: string | null
           delivery_lga: string | null
           delivery_state: string | null
+          dob: string | null
           first_name: string | null
           full_name: string | null
           home_address: string | null
           id: string
+          landmark: string | null
           last_name: string | null
           lga: string | null
           middle_name: string | null
           phone: string | null
+          restricted: boolean | null
           state: string | null
           status: string | null
           updated_at: string
           user_id: string
+          username: string | null
+          warning_message: string | null
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
+          badge?: string | null
+          city?: string | null
           created_at?: string
           date_of_birth?: string | null
           delivery_address?: string | null
           delivery_landmarks?: string | null
           delivery_lga?: string | null
           delivery_state?: string | null
+          dob?: string | null
           first_name?: string | null
           full_name?: string | null
           home_address?: string | null
           id?: string
+          landmark?: string | null
           last_name?: string | null
           lga?: string | null
           middle_name?: string | null
           phone?: string | null
+          restricted?: boolean | null
           state?: string | null
           status?: string | null
           updated_at?: string
           user_id: string
+          username?: string | null
+          warning_message?: string | null
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
+          badge?: string | null
+          city?: string | null
           created_at?: string
           date_of_birth?: string | null
           delivery_address?: string | null
           delivery_landmarks?: string | null
           delivery_lga?: string | null
           delivery_state?: string | null
+          dob?: string | null
           first_name?: string | null
           full_name?: string | null
           home_address?: string | null
           id?: string
+          landmark?: string | null
           last_name?: string | null
           lga?: string | null
           middle_name?: string | null
           phone?: string | null
+          restricted?: boolean | null
           state?: string | null
           status?: string | null
           updated_at?: string
           user_id?: string
+          username?: string | null
+          warning_message?: string | null
         }
         Relationships: []
       }
@@ -597,27 +788,36 @@ export type Database = {
           created_at: string
           id: string
           label: string
+          max_spins_per_user: number | null
           prize_type: string
           prize_value: string
+          prizes: Json | null
           probability: number
+          title: string | null
         }
         Insert: {
           active?: boolean
           created_at?: string
           id?: string
           label: string
+          max_spins_per_user?: number | null
           prize_type?: string
           prize_value?: string
+          prizes?: Json | null
           probability?: number
+          title?: string | null
         }
         Update: {
           active?: boolean
           created_at?: string
           id?: string
           label?: string
+          max_spins_per_user?: number | null
           prize_type?: string
           prize_value?: string
+          prizes?: Json | null
           probability?: number
+          title?: string | null
         }
         Relationships: []
       }
