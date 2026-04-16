@@ -1,117 +1,201 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Truck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { formatPrice } from "@/lib/format";
+import { MapPin, Plus, Search, Filter } from "lucide-react";
 import { toast } from "sonner";
 
+interface TrackingEntry {
+  id: string;
+  order_id: string;
+  status: string;
+  description: string;
+  created_at: string;
+}
+
+const trackingStatuses = [
+  "Order Received",
+  "Orders Being Sorted",
+  "Package Being Prepared",
+  "Package Out for Delivery",
+  "In Transit",
+  "Arrived at Local Hub",
+  "Out for Final Delivery",
+  "Delivered Successfully",
+  "Refund: Verifying Payment",
+  "Refund: Payment Received",
+  "Refund: Approved",
+  "Refund: Refund in Progress",
+  "Refund: Refunded",
+];
+
 export function AdminTracking() {
-  const [items, setItems] = useState<any[]>([]);
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editData, setEditData] = useState({ tracking_number: "", carrier: "", status: "", notes: "", estimated_delivery: "" });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState("");
+  const [tracking, setTracking] = useState<TrackingEntry[]>([]);
+  const [newStatus, setNewStatus] = useState("");
+  const [newDesc, setNewDesc] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  useEffect(() => { fetchTracking(); }, []);
-
-  const fetchTracking = async () => {
-    const { data } = await supabase.from("tracking").select("*").order("created_at", { ascending: false });
+  const fetchOrders = async () => {
+    const { data } = await supabase.from("orders").select("*")
+      .order("created_at", { ascending: false });
     if (data) {
-      const userIds = [...new Set(data.map(t => t.user_id))];
-      const orderIds = [...new Set(data.filter(t => t.order_id).map(t => t.order_id))];
-      
-      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone, delivery_address, delivery_state, delivery_lga").in("user_id", userIds);
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
-      
-      const { data: orders } = orderIds.length > 0 
-        ? await supabase.from("orders").select("id, total, status, items").in("id", orderIds)
-        : { data: [] };
-      const orderMap = new Map(orders?.map(o => [o.id, o]) || []);
-      
-      setItems(data.map(t => ({ 
-        ...t, 
-        profile: profileMap.get(t.user_id) || {},
-        order: orderMap.get(t.order_id) || null,
-      })));
+      setOrders(data);
+      applyFilters(data, searchQuery, statusFilter);
     }
   };
 
-  const save = async (id: string) => {
-    const { error } = await supabase.from("tracking").update({ 
-      ...editData, 
-      estimated_delivery: editData.estimated_delivery || null,
-      updated_at: new Date().toISOString() 
-    }).eq("id", id);
-    if (error) { toast.error("Failed"); return; }
-    toast.success("Tracking updated!");
-    setEditId(null);
-    fetchTracking();
+  const applyFilters = (data: any[], search: string, status: string) => {
+    let filtered = data;
+    if (status !== "all") {
+      filtered = filtered.filter((o: any) => o.status === status);
+    }
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter((o: any) =>
+        o.id.toLowerCase().includes(q) || (o.user_name || "").toLowerCase().includes(q)
+      );
+    }
+    setFilteredOrders(filtered);
   };
 
-  const statusColors: Record<string, string> = {
-    processing: "bg-yellow-500/20 text-yellow-400",
-    shipped: "bg-blue-500/20 text-blue-400",
-    in_transit: "bg-purple-500/20 text-purple-400",
-    delivered: "bg-green-500/20 text-green-400",
+  useEffect(() => { applyFilters(orders, searchQuery, statusFilter); }, [searchQuery, statusFilter]);
+
+  const fetchTracking = async (orderId: string) => {
+    const { data } = await supabase.from("order_tracking").select("*")
+      .eq("order_id", orderId).order("created_at", { ascending: true });
+    if (data) setTracking(data as TrackingEntry[]);
+  };
+
+  useEffect(() => { fetchOrders(); }, []);
+  useEffect(() => { if (selectedOrder) fetchTracking(selectedOrder); }, [selectedOrder]);
+
+  const addUpdate = async () => {
+    if (!selectedOrder || !newStatus) return;
+    await supabase.from("order_tracking").insert({
+      order_id: selectedOrder,
+      status: newStatus,
+      description: newDesc,
+    } as any);
+
+    // Update order status
+    if (newStatus === "Delivered Successfully") {
+      await supabase.from("orders").update({ status: "Delivered" } as any).eq("id", selectedOrder);
+    } else if (newStatus.includes("Out for") || newStatus.includes("Transit")) {
+      await supabase.from("orders").update({ status: "Shipped" } as any).eq("id", selectedOrder);
+    } else if (newStatus.startsWith("Refund:")) {
+      const refundStatus = newStatus.replace("Refund: ", "");
+      await supabase.from("orders").update({ refund_status: refundStatus } as any).eq("id", selectedOrder);
+    } else {
+      await supabase.from("orders").update({ status: "Processing" } as any).eq("id", selectedOrder);
+    }
+
+    const order = orders.find((o: any) => o.id === selectedOrder);
+    if (order) {
+      await supabase.from("notifications").insert({
+        user_id: order.user_id,
+        title: "Order Update",
+        message: `Order #${selectedOrder.slice(0, 8)}: ${newStatus}. ${newDesc}`,
+        type: "info",
+        link: "/orders",
+      } as any);
+    }
+
+    toast.success("Tracking updated");
+    setNewStatus("");
+    setNewDesc("");
+    fetchTracking(selectedOrder);
+    fetchOrders();
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl font-semibold text-foreground flex items-center gap-2">
-          <Truck className="h-5 w-5 text-gold" /> Order Tracking ({items.length})
-        </h2>
-        <Button size="sm" variant="outline" className="border-gold/30 text-gold" onClick={fetchTracking}>Refresh</Button>
-      </div>
-      {items.map(t => (
-        <div key={t.id} className="glass-card rounded-xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <span className="font-medium text-foreground">{t.profile?.full_name || "Unknown"}</span>
-              {t.profile?.phone && <span className="text-xs text-muted-foreground ml-2">({t.profile.phone})</span>}
-            </div>
-            <Badge className={statusColors[t.status] || "bg-secondary text-foreground"}>{t.status}</Badge>
-          </div>
-          
-          {t.order_id && (
-            <p className="text-xs text-muted-foreground">
-              Order: #{t.order_id.slice(0, 8)} 
-              {t.order && <span> — ₦{t.order.total?.toLocaleString()} — {t.order.status}</span>}
-            </p>
-          )}
-          
-          {t.profile?.delivery_address && (
-            <p className="text-xs text-muted-foreground">📍 {t.profile.delivery_address}, {t.profile.delivery_lga}, {t.profile.delivery_state}</p>
-          )}
-          
-          {t.tracking_number && <p className="text-sm text-foreground">Tracking #: <span className="font-mono text-gold">{t.tracking_number}</span></p>}
-          {t.carrier && <p className="text-xs text-muted-foreground">Carrier: {t.carrier}</p>}
-          {t.estimated_delivery && <p className="text-xs text-muted-foreground">ETA: {new Date(t.estimated_delivery).toLocaleDateString()}</p>}
-          {t.notes && <p className="text-xs text-muted-foreground bg-secondary/30 rounded p-2">Notes: {t.notes}</p>}
-          
-          {editId === t.id ? (
-            <div className="space-y-2 pt-2 border-t border-border">
-              <Input placeholder="Tracking Number" value={editData.tracking_number} onChange={e => setEditData(d => ({ ...d, tracking_number: e.target.value }))} className="bg-secondary border-border" />
-              <Input placeholder="Carrier (e.g. GIG, DHL)" value={editData.carrier} onChange={e => setEditData(d => ({ ...d, carrier: e.target.value }))} className="bg-secondary border-border" />
-              <Select value={editData.status} onValueChange={v => setEditData(d => ({ ...d, status: v }))}>
-                <SelectTrigger className="bg-secondary border-border"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {["processing", "shipped", "in_transit", "delivered"].map(s => <SelectItem key={s} value={s}>{s.replace("_", " ")}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input type="date" placeholder="Estimated Delivery" value={editData.estimated_delivery} onChange={e => setEditData(d => ({ ...d, estimated_delivery: e.target.value }))} className="bg-secondary border-border" />
-              <Input placeholder="Notes" value={editData.notes} onChange={e => setEditData(d => ({ ...d, notes: e.target.value }))} className="bg-secondary border-border" />
-              <div className="flex gap-2">
-                <Button size="sm" className="gradient-gold text-primary-foreground" onClick={() => save(t.id)}>Save</Button>
-                <Button size="sm" variant="outline" onClick={() => setEditId(null)}>Cancel</Button>
-              </div>
-            </div>
-          ) : (
-            <Button size="sm" variant="outline" className="border-gold/30 text-gold" onClick={() => { setEditId(t.id); setEditData({ tracking_number: t.tracking_number || "", carrier: t.carrier || "", status: t.status, notes: t.notes || "", estimated_delivery: t.estimated_delivery ? t.estimated_delivery.split("T")[0] : "" }); }}>Edit Tracking</Button>
-          )}
+    <div className="space-y-6">
+      <h2 className="font-display text-xl font-semibold text-foreground">Order Tracking</h2>
+
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search by order ID or customer..." className="bg-secondary border-border pl-9" />
         </div>
-      ))}
-      {items.length === 0 && <p className="text-center text-muted-foreground py-10">No tracking entries yet. Tracking is auto-created when orders are marked as processing or shipped.</p>}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[200px] bg-secondary border-border">
+            <Filter className="h-4 w-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Pending Payment">Pending Payment</SelectItem>
+            <SelectItem value="Payment Confirmed">Payment Confirmed</SelectItem>
+            <SelectItem value="Processing">Processing</SelectItem>
+            <SelectItem value="Shipped">Shipped</SelectItem>
+            <SelectItem value="Delivered">Delivered</SelectItem>
+            <SelectItem value="Cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Order selector */}
+      <Select value={selectedOrder} onValueChange={setSelectedOrder}>
+        <SelectTrigger className="bg-secondary border-border">
+          <SelectValue placeholder={`Select Order (${filteredOrders.length} orders)`} />
+        </SelectTrigger>
+        <SelectContent>
+          {filteredOrders.map((o: any) => (
+            <SelectItem key={o.id} value={o.id}>
+              {o.id.slice(0, 8)} — {o.user_name || "Unknown"} — {formatPrice(o.total)} [{o.status}]
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {selectedOrder && (
+        <div className="glass-card rounded-xl p-6 space-y-6">
+          <h3 className="font-display text-lg font-semibold text-foreground">Tracking History</h3>
+          
+          <div className="space-y-4">
+            {tracking.map((t, i) => (
+              <div key={t.id} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div className="h-3 w-3 rounded-full bg-gold" />
+                  {i < tracking.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" />}
+                </div>
+                <div className="flex-1 pb-4">
+                  <p className="font-semibold text-foreground text-sm">{t.status}</p>
+                  {t.description && <p className="text-xs text-muted-foreground">{t.description}</p>}
+                  <p className="text-xs text-muted-foreground mt-1">{new Date(t.created_at).toLocaleString()}</p>
+                </div>
+              </div>
+            ))}
+            {tracking.length === 0 && <p className="text-sm text-muted-foreground">No tracking updates yet.</p>}
+          </div>
+
+          {/* Add Update */}
+          <div className="space-y-3 pt-4 border-t border-border">
+            <h4 className="font-medium text-foreground text-sm">Add Tracking Update</h4>
+            <Select value={newStatus} onValueChange={setNewStatus}>
+              <SelectTrigger className="bg-secondary border-border">
+                <SelectValue placeholder="Select tracking status..." />
+              </SelectTrigger>
+              <SelectContent>
+                {trackingStatuses.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Textarea placeholder="Description (optional)..." value={newDesc} onChange={e => setNewDesc(e.target.value)} className="bg-secondary border-border min-h-[60px]" />
+            <Button onClick={addUpdate} className="gradient-gold text-primary-foreground">
+              <Plus className="h-4 w-4 mr-1" /> Add Update
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
