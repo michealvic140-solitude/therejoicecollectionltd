@@ -6,3 +6,5 @@ export const formatPrice = (price: number) => {
     maximumFractionDigits: 0,
   }).format(price).replace('NGN', '₦');
 };
+
+export const formatNGN = formatPrice;
