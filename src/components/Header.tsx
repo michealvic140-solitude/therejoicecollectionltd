@@ -53,7 +53,7 @@ export function Header() {
               { to: "/", label: "Home" },
               { to: "/shop", label: "Shop", search: {} },
               { to: "/vault", label: "Vault" },
-              { to: "/chat", label: "Chat" },
+              { to: "/support", label: "Support" },
             ].map(item => (
               <Link key={item.to} to={item.to as any} search={(item as any).search} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive(item.to) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {item.label}
