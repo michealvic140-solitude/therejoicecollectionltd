@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice } from "@/lib/format";
 import { Eye, Check, X, CreditCard } from "lucide-react";
 import { toast } from "sonner";
@@ -119,6 +120,14 @@ export function AdminPayments() {
                   </Button>
                 </>
               )}
+              <Select value={order.status} onValueChange={v => setPaymentStatus(order, v)}>
+                <SelectTrigger className="w-[200px] text-xs bg-secondary border-border">
+                  <SelectValue placeholder="Set status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             {order.cancellation_reason && (
