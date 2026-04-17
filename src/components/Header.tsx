@@ -115,7 +115,7 @@ export function Header() {
             <Link to="/" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Home</Link>
             <Link to="/shop" search={{}} onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/shop") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Shop</Link>
             <Link to="/vault" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/vault") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Vault</Link>
-            <Link to="/chat" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/chat") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Chat</Link>
+            <Link to="/support" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/support") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Support</Link>
             {user && (
               <>
                 <Link to="/dashboard" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/dashboard") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Dashboard</Link>
