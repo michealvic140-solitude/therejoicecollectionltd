@@ -39,6 +39,7 @@ function ChatPage() {
       .from("chats")
       .select("*")
       .eq("user_id", user.id)
+      .eq("is_system", false)
       .order("created_at", { ascending: true });
     if (data) setMessages(data as ChatRow[]);
   };

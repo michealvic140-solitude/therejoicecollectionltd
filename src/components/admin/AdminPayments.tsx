@@ -4,9 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatPrice } from "@/lib/format";
 import { Eye, Check, X, CreditCard } from "lucide-react";
 import { toast } from "sonner";
+
+const PAYMENT_STATUSES = [
+  "Pending Payment", "Payment Confirmed", "Refunded", "Refund In Progress",
+  "Escalating Refund", "Reviewing Payment", "Refund Denied",
+];
 
 export function AdminPayments() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -34,6 +40,19 @@ export function AdminPayments() {
     fetchOrders();
   };
 
+  const setPaymentStatus = async (order: any, status: string) => {
+    await supabase.from("orders").update({ status, refund_status: status.toLowerCase().includes("refund") ? status : null } as any).eq("id", order.id);
+    await supabase.from("notifications").insert({
+      user_id: order.user_id,
+      title: `Payment status: ${status}`,
+      message: `Your order #${order.id.slice(0, 8)} payment status was updated to: ${status}`,
+      type: status === "Refunded" ? "success" : status === "Refund Denied" ? "error" : "info",
+      link: "/orders",
+    } as any);
+    toast.success(`Status: ${status}`);
+    fetchOrders();
+  };
+
   const declinePayment = async (orderId: string, userId: string) => {
     await supabase.from("orders").update({ status: "Pending Payment", cancellation_reason: declineMsg } as any).eq("id", orderId);
     await supabase.from("notifications").insert({
@@ -49,9 +68,9 @@ export function AdminPayments() {
     fetchOrders();
   };
 
-  // Show orders that have screenshot proof OR are in Pending Payment status
   const paymentOrders = orders.filter((o: any) =>
-    (o.screenshot_url && o.screenshot_url.trim() !== "") || o.status === "Pending Payment"
+    (o.screenshot_url && o.screenshot_url.trim() !== "") || o.status === "Pending Payment" ||
+    PAYMENT_STATUSES.includes(o.status)
   );
 
   return (
@@ -101,6 +120,14 @@ export function AdminPayments() {
                   </Button>
                 </>
               )}
+              <Select value={order.status} onValueChange={v => setPaymentStatus(order, v)}>
+                <SelectTrigger className="w-[200px] text-xs bg-secondary border-border">
+                  <SelectValue placeholder="Set status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
 
             {order.cancellation_reason && (
