@@ -8,6 +8,11 @@ import { formatPrice } from "@/lib/format";
 import { Eye, Check, X, CreditCard } from "lucide-react";
 import { toast } from "sonner";
 
+const PAYMENT_STATUSES = [
+  "Pending Payment", "Payment Confirmed", "Refunded", "Refund In Progress",
+  "Escalating Refund", "Reviewing Payment", "Refund Denied",
+];
+
 export function AdminPayments() {
   const [orders, setOrders] = useState<any[]>([]);
   const [viewImage, setViewImage] = useState<string | null>(null);
@@ -34,6 +39,19 @@ export function AdminPayments() {
     fetchOrders();
   };
 
+  const setPaymentStatus = async (order: any, status: string) => {
+    await supabase.from("orders").update({ status, refund_status: status.toLowerCase().includes("refund") ? status : null } as any).eq("id", order.id);
+    await supabase.from("notifications").insert({
+      user_id: order.user_id,
+      title: `Payment status: ${status}`,
+      message: `Your order #${order.id.slice(0, 8)} payment status was updated to: ${status}`,
+      type: status === "Refunded" ? "success" : status === "Refund Denied" ? "error" : "info",
+      link: "/orders",
+    } as any);
+    toast.success(`Status: ${status}`);
+    fetchOrders();
+  };
+
   const declinePayment = async (orderId: string, userId: string) => {
     await supabase.from("orders").update({ status: "Pending Payment", cancellation_reason: declineMsg } as any).eq("id", orderId);
     await supabase.from("notifications").insert({
@@ -49,9 +67,9 @@ export function AdminPayments() {
     fetchOrders();
   };
 
-  // Show orders that have screenshot proof OR are in Pending Payment status
   const paymentOrders = orders.filter((o: any) =>
-    (o.screenshot_url && o.screenshot_url.trim() !== "") || o.status === "Pending Payment"
+    (o.screenshot_url && o.screenshot_url.trim() !== "") || o.status === "Pending Payment" ||
+    PAYMENT_STATUSES.includes(o.status)
   );
 
   return (
