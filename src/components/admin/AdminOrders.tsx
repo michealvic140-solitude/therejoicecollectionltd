@@ -8,7 +8,10 @@ import { formatPrice } from "@/lib/format";
 import { Eye, MapPin, Store } from "lucide-react";
 import { toast } from "sonner";
 
-const statuses = ["Pending Payment", "Payment Confirmed", "Processing", "Shipped", "Delivered", "Cancelled"];
+const statuses = [
+  "Pending Payment", "Payment Confirmed", "Processing", "Shipped", "Delivered", "Cancelled",
+  "Refunded", "Refund In Progress", "Escalating Refund", "Reviewing Payment", "Refund Denied",
+];
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -37,11 +40,13 @@ export function AdminOrders() {
   };
 
   const statusColor = (s: string) => {
-    if (s === "Delivered") return "bg-green-500/20 text-green-400";
-    if (s === "Cancelled") return "bg-red-500/20 text-red-400";
+    if (s === "Delivered" || s === "Refunded") return "bg-green-500/20 text-green-400";
+    if (s === "Cancelled" || s === "Refund Denied") return "bg-red-500/20 text-red-400";
     if (s === "Shipped") return "bg-purple-500/20 text-purple-400";
     if (s === "Processing") return "bg-blue-500/20 text-blue-400";
     if (s === "Payment Confirmed") return "bg-emerald-500/20 text-emerald-400";
+    if (s === "Refund In Progress" || s === "Reviewing Payment") return "bg-orange-500/20 text-orange-400";
+    if (s === "Escalating Refund") return "bg-pink-500/20 text-pink-400";
     return "bg-yellow-500/20 text-yellow-400";
   };
 
