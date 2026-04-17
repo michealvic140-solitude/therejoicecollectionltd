@@ -3,9 +3,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { useState } from "react";
+import { formatNGN } from "@/lib/format";
 
 export const Route = createFileRoute("/cart")({
   component: CartPage,
@@ -18,10 +16,9 @@ export const Route = createFileRoute("/cart")({
 });
 
 function CartPage() {
-  const { items, removeFromCart, updateQuantity, clearCart, total, itemCount } = useCart();
+  const { items, removeFromCart, updateQuantity, total, itemCount } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [placing, setPlacing] = useState(false);
 
   if (!user) {
     return (
@@ -34,26 +31,6 @@ function CartPage() {
       </div>
     );
   }
-
-  const placeOrder = async () => {
-    if (items.length === 0) return;
-    setPlacing(true);
-    try {
-      const { data: order, error } = await supabase.from("orders").insert({
-        user_id: user.id,
-        total,
-        status: "pending",
-        items: items.map(i => ({ product_id: i.product_id, quantity: i.quantity, price: i.product?.price })),
-      }).select().single();
-      if (error) throw error;
-      await clearCart();
-      toast.success("Order placed successfully!");
-      navigate({ to: "/orders" });
-    } catch (e: any) {
-      toast.error(e.message || "Failed to place order");
-    }
-    setPlacing(false);
-  };
 
   return (
     <div className="min-h-screen py-8 px-4">
@@ -84,14 +61,14 @@ function CartPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground truncate">{item.product?.name}</h3>
-                  <p className="text-gold font-bold">₦{(item.product?.price || 0).toLocaleString()}</p>
+                  <p className="text-gold font-bold">{formatNGN(item.product?.price || 0)}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => updateQuantity(item.product_id, item.quantity - 1)} className="p-1 rounded hover:bg-secondary"><Minus className="h-4 w-4" /></button>
                   <span className="w-8 text-center font-medium">{item.quantity}</span>
                   <button onClick={() => updateQuantity(item.product_id, item.quantity + 1)} className="p-1 rounded hover:bg-secondary"><Plus className="h-4 w-4" /></button>
                 </div>
-                <p className="font-bold text-foreground w-24 text-right">₦{((item.product?.price || 0) * item.quantity).toLocaleString()}</p>
+                <p className="font-bold text-foreground w-24 text-right">{formatNGN((item.product?.price || 0) * item.quantity)}</p>
                 <button onClick={() => removeFromCart(item.product_id)} className="p-2 rounded hover:bg-destructive/10 text-destructive">
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -100,11 +77,12 @@ function CartPage() {
 
             <div className="glass-card rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between text-lg">
-                <span className="text-muted-foreground">Total ({itemCount} items)</span>
-                <span className="font-display text-2xl font-bold text-gold">₦{total.toLocaleString()}</span>
+                <span className="text-muted-foreground">Subtotal ({itemCount} items)</span>
+                <span className="font-display text-2xl font-bold text-gold">{formatNGN(total)}</span>
               </div>
-              <Button size="lg" className="w-full gradient-gold text-primary-foreground font-semibold text-lg" onClick={placeOrder} disabled={placing}>
-                {placing ? "Placing Order..." : "Place Order"}
+              <p className="text-xs text-muted-foreground">Free shipping on orders above ₦50,000. Bank transfer with proof of payment.</p>
+              <Button size="lg" className="w-full gradient-gold text-primary-foreground font-semibold text-lg" onClick={() => navigate({ to: "/checkout" })}>
+                Proceed to Checkout
               </Button>
             </div>
           </div>

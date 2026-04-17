@@ -48,19 +48,24 @@ export function AIConcierge() {
       const orderId = cancelMatch[1].trim();
       const { error } = await supabase.from("orders").update({ status: "cancelled" }).eq("id", orderId).eq("user_id", user.id);
       if (!error) {
-        // Log the action
         await supabase.from("ai_logs").insert({
           user_id: user.id,
           message: `AI cancelled order #${orderId.slice(0, 8)} per user request. User said: "${userQuery}"`,
           type: "ai_action",
           metadata: { action: "cancel_order", order_id: orderId },
         });
-        // Notify admin
-        await supabase.from("messages").insert({
+        await supabase.from("chats").insert({
           user_id: user.id,
-          content: `[AI Action] Cancelled order #${orderId.slice(0, 8)} per user request. User said: "${userQuery}"`,
-          sender: "system",
-          escalated: true,
+          message: `[AI Action] Cancelled order #${orderId.slice(0, 8)} per user request. User said: "${userQuery}"`,
+          is_admin: false,
+          is_system: true,
+        });
+        await supabase.from("notifications").insert({
+          user_id: user.id,
+          title: "Order Cancelled",
+          message: `Your order #${orderId.slice(0, 8)} has been cancelled by AI per your request.`,
+          type: "order",
+          link: "/orders",
         });
       }
     }
@@ -85,22 +90,27 @@ export function AIConcierge() {
           type: "ai_action",
           metadata: { action: "request_refund", order_id: orderId, amount, reason },
         });
-        await supabase.from("messages").insert({
+        await supabase.from("chats").insert({
           user_id: user.id,
-          content: `[AI Action] Submitted refund request for order #${orderId.slice(0, 8)} — ₦${amount.toLocaleString()} — Reason: ${reason}`,
-          sender: "system",
-          escalated: true,
+          message: `[AI Action] Submitted refund request for order #${orderId.slice(0, 8)} — ₦${amount.toLocaleString()} — Reason: ${reason}`,
+          is_admin: false,
+          is_system: true,
         });
       }
     }
 
-    // Handle escalation
+    // Handle escalation — write to chats so admin sees it in AdminChats
     if (content.includes("[ESCALATE_TO_ADMIN]")) {
-      await supabase.from("messages").insert({
+      await supabase.from("chats").insert({
         user_id: user.id,
-        content: `[AI Escalation] User asked: "${userQuery}" — AI suggested escalation.`,
-        sender: "system",
-        escalated: true,
+        message: `[AI Escalation] User asked: "${userQuery}". Please reach out.`,
+        is_admin: false,
+        is_system: true,
+      });
+      await supabase.from("ai_logs").insert({
+        user_id: user.id,
+        message: `Escalation requested. User: "${userQuery}"`,
+        type: "escalation",
       });
     }
 
@@ -118,11 +128,11 @@ export function AIConcierge() {
     if (content.includes("[AI_ASKS_ADMIN]")) {
       const adminQuestion = content.split("[AI_ASKS_ADMIN]")[1]?.trim() || "";
       if (adminQuestion) {
-        await supabase.from("messages").insert({
+        await supabase.from("chats").insert({
           user_id: user.id,
-          content: `[AI Question for Admin] Re: "${userQuery}" — AI asks: ${adminQuestion}`,
-          sender: "system",
-          escalated: true,
+          message: `[AI Question for Admin] Re: "${userQuery}" — AI asks: ${adminQuestion}`,
+          is_admin: false,
+          is_system: true,
         });
         await supabase.from("ai_logs").insert({
           user_id: user.id,
