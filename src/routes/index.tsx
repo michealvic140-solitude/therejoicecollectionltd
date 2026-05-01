@@ -23,6 +23,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [products, setProducts] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +33,23 @@ function Index() {
       .then(({ data }) => { if (data) setProducts(data); });
     supabase.from("announcements").select("*").eq("active", true).order("created_at", { ascending: false })
       .then(({ data }) => { if (data) setAnnouncements(data); });
+    supabase.from("settings").select("*").then(({ data }) => {
+      if (!data) return;
+      const s: Record<string, string> = {};
+      data.forEach((r: any) => { s[r.key] = r.value; });
+      setSettings(s);
+    });
   }, []);
+
+  const wa = settings.whatsapp ? settings.whatsapp.replace(/[^0-9]/g, "") : "";
+  const socials = [
+    wa && { label: "WhatsApp", icon: "💬", href: `https://wa.me/${wa}` },
+    settings.tiktok && { label: "TikTok", icon: "🎵", href: settings.tiktok },
+    settings.instagram && { label: "Instagram", icon: "📸", href: settings.instagram },
+    settings.facebook && { label: "Facebook", icon: "📘", href: settings.facebook },
+    settings.contact_email && { label: "Email", icon: "✉️", href: `mailto:${settings.contact_email}` },
+    settings.contact_phone && { label: "Call", icon: "📞", href: `tel:${settings.contact_phone}` },
+  ].filter(Boolean) as { label: string; icon: string; href: string }[];
 
   const handleAddToCart = async (id: string) => {
     if (!user) { navigate({ to: "/login" }); return; }
