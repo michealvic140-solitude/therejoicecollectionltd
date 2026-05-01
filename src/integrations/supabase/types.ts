@@ -14,9 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_knowledge_base: {
+        Row: {
+          active: boolean
+          answer: string
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          question: string
+          source_log_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          answer: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question: string
+          source_log_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          answer?: string
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          question?: string
+          source_log_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_knowledge_base_source_log_id_fkey"
+            columns: ["source_log_id"]
+            isOneToOne: false
+            referencedRelation: "ai_logs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_logs: {
         Row: {
           created_at: string
+          handled: boolean
           id: string
           message: string
           metadata: Json | null
@@ -25,6 +70,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          handled?: boolean
           id?: string
           message: string
           metadata?: Json | null
@@ -33,6 +79,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          handled?: boolean
           id?: string
           message?: string
           metadata?: Json | null
