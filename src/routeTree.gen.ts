@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VaultRouteImport } from './routes/vault'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -30,6 +31,11 @@ import { Route as ShopProductIdRouteImport } from './routes/shop.$productId'
 const VaultRoute = VaultRouteImport.update({
   id: '/vault',
   path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -128,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop/': typeof ShopIndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop': typeof ShopIndexRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop/': typeof ShopIndexRoute
@@ -188,6 +197,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop/'
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop/'
@@ -246,6 +258,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   VaultRoute: typeof VaultRoute
   ShopProductIdRoute: typeof ShopProductIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
@@ -258,6 +271,13 @@ declare module '@tanstack/react-router' {
       path: '/vault'
       fullPath: '/vault'
       preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -390,6 +410,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   VaultRoute: VaultRoute,
   ShopProductIdRoute: ShopProductIdRoute,
   ShopIndexRoute: ShopIndexRoute,
