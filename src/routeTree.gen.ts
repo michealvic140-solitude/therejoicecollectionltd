@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as VaultRouteImport } from './routes/vault'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -18,6 +19,7 @@ import { Route as OrdersRouteImport } from './routes/orders'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CartRouteImport } from './routes/cart'
@@ -29,6 +31,11 @@ import { Route as ShopProductIdRouteImport } from './routes/shop.$productId'
 const VaultRoute = VaultRouteImport.update({
   id: '/vault',
   path: '/vault',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SupportRoute = SupportRouteImport.update({
@@ -69,6 +76,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CheckoutRoute = CheckoutRouteImport.update({
@@ -113,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/cart': typeof CartRoute
   '/chat': typeof ChatRoute
   '/checkout': typeof CheckoutRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -121,6 +134,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop/': typeof ShopIndexRoute
@@ -131,6 +145,7 @@ export interface FileRoutesByTo {
   '/cart': typeof CartRoute
   '/chat': typeof ChatRoute
   '/checkout': typeof CheckoutRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -139,6 +154,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop': typeof ShopIndexRoute
@@ -150,6 +166,7 @@ export interface FileRoutesById {
   '/cart': typeof CartRoute
   '/chat': typeof ChatRoute
   '/checkout': typeof CheckoutRoute
+  '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -158,6 +175,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/support': typeof SupportRoute
+  '/terms': typeof TermsRoute
   '/vault': typeof VaultRoute
   '/shop/$productId': typeof ShopProductIdRoute
   '/shop/': typeof ShopIndexRoute
@@ -170,6 +188,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/chat'
     | '/checkout'
+    | '/contact'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -178,6 +197,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop/'
@@ -188,6 +208,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/chat'
     | '/checkout'
+    | '/contact'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -196,6 +217,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop'
@@ -206,6 +228,7 @@ export interface FileRouteTypes {
     | '/cart'
     | '/chat'
     | '/checkout'
+    | '/contact'
     | '/dashboard'
     | '/forgot-password'
     | '/login'
@@ -214,6 +237,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/support'
+    | '/terms'
     | '/vault'
     | '/shop/$productId'
     | '/shop/'
@@ -225,6 +249,7 @@ export interface RootRouteChildren {
   CartRoute: typeof CartRoute
   ChatRoute: typeof ChatRoute
   CheckoutRoute: typeof CheckoutRoute
+  ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -233,6 +258,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SupportRoute: typeof SupportRoute
+  TermsRoute: typeof TermsRoute
   VaultRoute: typeof VaultRoute
   ShopProductIdRoute: typeof ShopProductIdRoute
   ShopIndexRoute: typeof ShopIndexRoute
@@ -245,6 +271,13 @@ declare module '@tanstack/react-router' {
       path: '/vault'
       fullPath: '/vault'
       preLoaderRoute: typeof VaultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/support': {
@@ -301,6 +334,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/checkout': {
@@ -361,6 +401,7 @@ const rootRouteChildren: RootRouteChildren = {
   CartRoute: CartRoute,
   ChatRoute: ChatRoute,
   CheckoutRoute: CheckoutRoute,
+  ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
@@ -369,6 +410,7 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SupportRoute: SupportRoute,
+  TermsRoute: TermsRoute,
   VaultRoute: VaultRoute,
   ShopProductIdRoute: ShopProductIdRoute,
   ShopIndexRoute: ShopIndexRoute,

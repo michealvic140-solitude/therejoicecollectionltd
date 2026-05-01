@@ -23,6 +23,7 @@ export const Route = createFileRoute("/")({
 function Index() {
   const [products, setProducts] = useState<any[]>([]);
   const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [settings, setSettings] = useState<Record<string, string>>({});
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -32,7 +33,23 @@ function Index() {
       .then(({ data }) => { if (data) setProducts(data); });
     supabase.from("announcements").select("*").eq("active", true).order("created_at", { ascending: false })
       .then(({ data }) => { if (data) setAnnouncements(data); });
+    supabase.from("settings").select("*").then(({ data }) => {
+      if (!data) return;
+      const s: Record<string, string> = {};
+      data.forEach((r: any) => { s[r.key] = r.value; });
+      setSettings(s);
+    });
   }, []);
+
+  const wa = settings.whatsapp ? settings.whatsapp.replace(/[^0-9]/g, "") : "";
+  const socials = [
+    wa && { label: "WhatsApp", icon: "💬", href: `https://wa.me/${wa}` },
+    settings.tiktok && { label: "TikTok", icon: "🎵", href: settings.tiktok },
+    settings.instagram && { label: "Instagram", icon: "📸", href: settings.instagram },
+    settings.facebook && { label: "Facebook", icon: "📘", href: settings.facebook },
+    settings.contact_email && { label: "Email", icon: "✉️", href: `mailto:${settings.contact_email}` },
+    settings.contact_phone && { label: "Call", icon: "📞", href: `tel:${settings.contact_phone}` },
+  ].filter(Boolean) as { label: string; icon: string; href: string }[];
 
   const handleAddToCart = async (id: string) => {
     if (!user) { navigate({ to: "/login" }); return; }
@@ -164,6 +181,34 @@ function Index() {
               <p className="text-muted-foreground">Products coming soon...</p>
             </div>
           )}
+        </div>
+      </section>
+
+      {/* Connect with us — social channels */}
+      <section className="py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-2 text-gradient-gold">Connect With Us</h2>
+          <p className="text-center text-sm text-muted-foreground mb-8">Reach us anytime, on any channel.</p>
+          {socials.length > 0 ? (
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+              {socials.map((s) => (
+                <a key={s.label} href={s.href} target={s.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
+                  className="glass-card rounded-xl p-4 text-center hover:border-gold/40 hover:scale-105 transition-all">
+                  <div className="text-3xl mb-1">{s.icon}</div>
+                  <p className="text-xs font-medium text-foreground">{s.label}</p>
+                </a>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center text-sm text-muted-foreground">Social links coming soon.</p>
+          )}
+          <div className="text-center mt-6">
+            <Link to="/contact">
+              <Button variant="outline" className="border-gold/30 text-gold hover:bg-gold/10">
+                <HeadphonesIcon className="mr-2 h-4 w-4" /> Visit Contact Page
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
