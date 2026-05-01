@@ -2,39 +2,36 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
-import { ShoppingBag, User, Menu, X, Crown, LogOut, Shield, Bell, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, User, Menu, X, Crown, LogOut, Shield, MessageCircle, LayoutDashboard, LifeBuoy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
+import { NotificationsDropdown } from "@/components/NotificationsDropdown";
 
 export function Header() {
   const { user, isAdmin, signOut } = useAuth();
   const { itemCount } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [unreadChats, setUnreadChats] = useState(0);
   const location = useLocation();
 
   const isActive = (path: string) => location.pathname === path;
 
   useEffect(() => {
     if (!user) return;
-    // Check for unread admin replies
-    supabase.from("messages")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("sender", "admin")
-      .is("replied_at", null)
-      .then(({ count }) => setUnreadCount(count || 0));
-
+    const fetchUnread = async () => {
+      const { count } = await supabase
+        .from("chats")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("is_admin", true)
+        .eq("is_system", false)
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+      setUnreadChats(count || 0);
+    };
+    fetchUnread();
     const channel = supabase
-      .channel('header-notifications')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages', filter: `user_id=eq.${user.id}` }, () => {
-        supabase.from("messages")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .eq("sender", "admin")
-          .is("replied_at", null)
-          .then(({ count }) => setUnreadCount(count || 0));
-      })
+      .channel("header-chats")
+      .on("postgres_changes", { event: "*", schema: "public", table: "chats", filter: `user_id=eq.${user.id}` }, fetchUnread)
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user]);
@@ -53,7 +50,8 @@ export function Header() {
               { to: "/", label: "Home" },
               { to: "/shop", label: "Shop", search: {} },
               { to: "/vault", label: "Vault" },
-              { to: "/support", label: "Support" },
+              { to: "/contact", label: "Contact" },
+              { to: "/terms", label: "Terms" },
             ].map(item => (
               <Link key={item.to} to={item.to as any} search={(item as any).search} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${isActive(item.to) ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>
                 {item.label}
@@ -72,11 +70,12 @@ export function Header() {
                     </span>
                   )}
                 </Link>
-                <Link to="/chat" className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
-                  <Bell className="h-5 w-5 text-foreground" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-destructive text-xs font-bold flex items-center justify-center text-destructive-foreground">
-                      {unreadCount}
+                <NotificationsDropdown />
+                <Link to="/chat" className="relative p-2 rounded-lg hover:bg-secondary transition-colors" aria-label="Messages">
+                  <MessageCircle className="h-5 w-5 text-foreground" />
+                  {unreadChats > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-destructive text-[10px] font-bold flex items-center justify-center text-destructive-foreground">
+                      {unreadChats}
                     </span>
                   )}
                 </Link>
@@ -115,7 +114,8 @@ export function Header() {
             <Link to="/" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Home</Link>
             <Link to="/shop" search={{}} onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/shop") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Shop</Link>
             <Link to="/vault" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/vault") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Vault</Link>
-            <Link to="/support" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/support") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Support</Link>
+            <Link to="/contact" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/contact") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}><LifeBuoy className="inline h-4 w-4 mr-2" />Contact</Link>
+            <Link to="/terms" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/terms") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Terms & Conditions</Link>
             {user && (
               <>
                 <Link to="/dashboard" onClick={() => setMenuOpen(false)} className={`block px-4 py-3 rounded-lg text-sm font-medium ${isActive("/dashboard") ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}>Dashboard</Link>
