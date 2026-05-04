@@ -175,6 +175,19 @@ serve(async (req) => {
       }
     }
 
+    // Pull admin-curated knowledge base entries (apply to all users)
+    const { data: kb } = await supabase
+      .from("ai_knowledge_base")
+      .select("question, answer, category")
+      .eq("active", true)
+      .limit(100);
+    if (kb && kb.length > 0) {
+      userContext += `\n\nADMIN KNOWLEDGE BASE (use these answers when relevant — admin has taught you these):`;
+      kb.forEach((k: any, i: number) => {
+        userContext += `\n${i + 1}. [${k.category || "general"}] Q: ${k.question}\n   A: ${k.answer}`;
+      });
+    }
+
     const fullSystemPrompt = SYSTEM_PROMPT + userContext;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
