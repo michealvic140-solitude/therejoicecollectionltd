@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Bot, MessageCircle, Sparkles, Star, Filter, AlertTriangle, ThumbsUp, HelpCircle, Zap } from "lucide-react";
+import { Bot, MessageCircle, Sparkles, Star, Filter, AlertTriangle, ThumbsUp, HelpCircle, Zap, BookOpen, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface AILog {
   id: string;
@@ -12,8 +14,12 @@ interface AILog {
   type: string;
   metadata: any;
   created_at: string;
+  handled?: boolean;
   profiles?: { full_name: string | null };
 }
+
+interface KBEntry { id: string; question: string; answer: string; category: string; active: boolean; }
+
 
 interface AIRecommendation {
   category: string;
@@ -30,8 +36,50 @@ export function AdminAILogs() {
   const [feedbackLogs, setFeedbackLogs] = useState<AILog[]>([]);
   const [adminQuestions, setAdminQuestions] = useState<AILog[]>([]);
   const [aiActions, setAiActions] = useState<AILog[]>([]);
+  const [kb, setKb] = useState<KBEntry[]>([]);
+  const [answerDraft, setAnswerDraft] = useState<Record<string, string>>({});
+  const [newKb, setNewKb] = useState({ question: "", answer: "", category: "general" });
 
-  useEffect(() => { fetchLogs(); }, []);
+  useEffect(() => { fetchLogs(); fetchKb(); }, []);
+
+  const fetchKb = async () => {
+    const { data } = await supabase.from("ai_knowledge_base").select("*").order("created_at", { ascending: false });
+    if (data) setKb(data as any);
+  };
+
+  const teachAi = async (log: AILog) => {
+    const answer = (answerDraft[log.id] || "").trim();
+    if (!answer) { toast.error("Type an answer first"); return; }
+    const { error } = await supabase.from("ai_knowledge_base").insert({
+      question: log.message, answer, category: "from_admin_question", source_log_id: log.id, active: true,
+    } as any);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("ai_logs").update({ handled: true } as any).eq("id", log.id);
+    toast.success("AI learned this answer");
+    setAnswerDraft(d => { const n = { ...d }; delete n[log.id]; return n; });
+    fetchLogs();
+    fetchKb();
+  };
+
+  const addKbEntry = async () => {
+    if (!newKb.question.trim() || !newKb.answer.trim()) { toast.error("Question + answer required"); return; }
+    const { error } = await supabase.from("ai_knowledge_base").insert(newKb as any);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Knowledge added");
+    setNewKb({ question: "", answer: "", category: "general" });
+    fetchKb();
+  };
+
+  const toggleKb = async (entry: KBEntry) => {
+    await supabase.from("ai_knowledge_base").update({ active: !entry.active } as any).eq("id", entry.id);
+    fetchKb();
+  };
+
+  const deleteKb = async (id: string) => {
+    await supabase.from("ai_knowledge_base").delete().eq("id", id);
+    fetchKb();
+  };
+
 
   const fetchLogs = async () => {
     const { data } = await supabase
