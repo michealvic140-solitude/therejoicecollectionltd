@@ -8,7 +8,8 @@ import { Plus, Trash2, Edit, Eye, EyeOff } from "lucide-react";
 export function AdminProducts() {
   const [products, setProducts] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", description: "", price: "", image_url: "", category: "watches", visible: true, vault: false, stock: "0", original_price: "" });
+  const emptyForm = { name: "", description: "", price: "", image_url: "", category: "watches", visible: true, vault: false, stock: "0", original_price: "", discount_percent: "", discount_hours: "" };
+  const [form, setForm] = useState(emptyForm);
 
   const fetchProducts = async () => {
     const { data } = await supabase.from("products").select("*").order("created_at", { ascending: false });
@@ -18,6 +19,8 @@ export function AdminProducts() {
   useEffect(() => { fetchProducts(); }, []);
 
   const addProduct = async () => {
+    const hours = parseFloat(form.discount_hours);
+    const discountEndsAt = hours > 0 ? new Date(Date.now() + hours * 3600 * 1000).toISOString() : null;
     const { error } = await supabase.from("products").insert({
       name: form.name,
       description: form.description,
@@ -28,9 +31,11 @@ export function AdminProducts() {
       visible: form.visible,
       vault: form.vault,
       stock: parseInt(form.stock),
-    });
+      discount_percent: form.discount_percent ? parseFloat(form.discount_percent) : 0,
+      discount_ends_at: discountEndsAt,
+    } as any);
     if (error) toast.error(error.message);
-    else { toast.success("Product added!"); setShowForm(false); setForm({ name: "", description: "", price: "", image_url: "", category: "watches", visible: true, vault: false, stock: "0", original_price: "" }); fetchProducts(); }
+    else { toast.success("Product added!"); setShowForm(false); setForm(emptyForm); fetchProducts(); }
   };
 
   const toggleVisibility = async (id: string, visible: boolean) => {
@@ -66,6 +71,10 @@ export function AdminProducts() {
             </select>
           </div>
           <Input placeholder="Description" value={form.description} onChange={e => setForm({...form, description: e.target.value})} className="bg-secondary border-border" />
+          <div className="grid grid-cols-2 gap-4">
+            <Input placeholder="Discount % (e.g. 20)" type="number" value={form.discount_percent} onChange={e => setForm({...form, discount_percent: e.target.value})} className="bg-secondary border-border" />
+            <Input placeholder="Discount duration (hours)" type="number" value={form.discount_hours} onChange={e => setForm({...form, discount_hours: e.target.value})} className="bg-secondary border-border" />
+          </div>
           <div className="flex gap-4">
             <label className="flex items-center gap-2 text-sm text-foreground">
               <input type="checkbox" checked={form.vault} onChange={e => setForm({...form, vault: e.target.checked})} /> Vault Item

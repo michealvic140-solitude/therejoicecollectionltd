@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { Bot, MessageCircle, Sparkles, Star, Filter, AlertTriangle, ThumbsUp, HelpCircle, Zap } from "lucide-react";
+import { Bot, MessageCircle, Sparkles, Star, Filter, AlertTriangle, ThumbsUp, HelpCircle, Zap, BookOpen, Check } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 interface AILog {
   id: string;
@@ -12,8 +14,12 @@ interface AILog {
   type: string;
   metadata: any;
   created_at: string;
+  handled?: boolean;
   profiles?: { full_name: string | null };
 }
+
+interface KBEntry { id: string; question: string; answer: string; category: string; active: boolean; }
+
 
 interface AIRecommendation {
   category: string;
@@ -30,8 +36,50 @@ export function AdminAILogs() {
   const [feedbackLogs, setFeedbackLogs] = useState<AILog[]>([]);
   const [adminQuestions, setAdminQuestions] = useState<AILog[]>([]);
   const [aiActions, setAiActions] = useState<AILog[]>([]);
+  const [kb, setKb] = useState<KBEntry[]>([]);
+  const [answerDraft, setAnswerDraft] = useState<Record<string, string>>({});
+  const [newKb, setNewKb] = useState({ question: "", answer: "", category: "general" });
 
-  useEffect(() => { fetchLogs(); }, []);
+  useEffect(() => { fetchLogs(); fetchKb(); }, []);
+
+  const fetchKb = async () => {
+    const { data } = await supabase.from("ai_knowledge_base").select("*").order("created_at", { ascending: false });
+    if (data) setKb(data as any);
+  };
+
+  const teachAi = async (log: AILog) => {
+    const answer = (answerDraft[log.id] || "").trim();
+    if (!answer) { toast.error("Type an answer first"); return; }
+    const { error } = await supabase.from("ai_knowledge_base").insert({
+      question: log.message, answer, category: "from_admin_question", source_log_id: log.id, active: true,
+    } as any);
+    if (error) { toast.error(error.message); return; }
+    await supabase.from("ai_logs").update({ handled: true } as any).eq("id", log.id);
+    toast.success("AI learned this answer");
+    setAnswerDraft(d => { const n = { ...d }; delete n[log.id]; return n; });
+    fetchLogs();
+    fetchKb();
+  };
+
+  const addKbEntry = async () => {
+    if (!newKb.question.trim() || !newKb.answer.trim()) { toast.error("Question + answer required"); return; }
+    const { error } = await supabase.from("ai_knowledge_base").insert(newKb as any);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Knowledge added");
+    setNewKb({ question: "", answer: "", category: "general" });
+    fetchKb();
+  };
+
+  const toggleKb = async (entry: KBEntry) => {
+    await supabase.from("ai_knowledge_base").update({ active: !entry.active } as any).eq("id", entry.id);
+    fetchKb();
+  };
+
+  const deleteKb = async (id: string) => {
+    await supabase.from("ai_knowledge_base").delete().eq("id", id);
+    fetchKb();
+  };
+
 
   const fetchLogs = async () => {
     const { data } = await supabase
@@ -140,27 +188,83 @@ export function AdminAILogs() {
         </div>
       )}
 
-      {/* AI Questions for Admin */}
+      {/* AI Questions for Admin — teach-back loop */}
       {adminQuestions.length > 0 && (
         <div className="glass-card rounded-xl p-6 border border-purple-500/20">
           <div className="flex items-center gap-2 mb-4">
             <HelpCircle className="h-6 w-6 text-purple-400" />
             <h2 className="font-display text-xl font-semibold text-foreground">AI Questions for Admin</h2>
-            <Badge className="bg-purple-500/20 text-purple-400">{adminQuestions.length}</Badge>
+            <Badge className="bg-purple-500/20 text-purple-400">{adminQuestions.filter(q => !q.handled).length} pending</Badge>
           </div>
-          <div className="space-y-3 max-h-64 overflow-y-auto">
+          <p className="text-xs text-muted-foreground mb-4">Answer these and the AI will permanently learn the response.</p>
+          <div className="space-y-3 max-h-[500px] overflow-y-auto">
             {adminQuestions.map(log => (
-              <div key={log.id} className="bg-purple-500/5 border border-purple-500/10 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs text-purple-400 font-medium">{log.profiles?.full_name || "Unknown"}</span>
-                  <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+              <div key={log.id} className={`bg-purple-500/5 border rounded-lg p-4 space-y-3 ${log.handled ? "border-green-500/20 opacity-60" : "border-purple-500/10"}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-purple-400 font-medium">{log.profiles?.full_name || "Unknown user"} asked</span>
+                  <div className="flex items-center gap-2">
+                    {log.handled && <Badge className="bg-green-500/20 text-green-400 text-[10px]"><Check className="h-3 w-3 mr-1" />Taught</Badge>}
+                    <span className="text-xs text-muted-foreground">{new Date(log.created_at).toLocaleString()}</span>
+                  </div>
                 </div>
-                <p className="text-sm text-foreground">{log.message}</p>
+                <p className="text-sm text-foreground font-medium">"{log.message}"</p>
+                {!log.handled && (
+                  <div className="space-y-2">
+                    <Textarea
+                      placeholder="Type the answer the AI should give next time..."
+                      value={answerDraft[log.id] || ""}
+                      onChange={e => setAnswerDraft(d => ({ ...d, [log.id]: e.target.value }))}
+                      className="bg-secondary border-border text-sm min-h-[60px]"
+                    />
+                    <Button size="sm" className="gradient-gold text-primary-foreground" onClick={() => teachAi(log)}>
+                      <BookOpen className="h-3 w-3 mr-1" /> Teach AI
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
       )}
+
+      {/* AI Knowledge Base */}
+      <div className="glass-card rounded-xl p-6 border border-blue-500/20">
+        <div className="flex items-center gap-2 mb-4">
+          <BookOpen className="h-6 w-6 text-blue-400" />
+          <h2 className="font-display text-xl font-semibold text-foreground">AI Knowledge Base</h2>
+          <Badge className="bg-blue-500/20 text-blue-400">{kb.filter(e => e.active).length} active</Badge>
+        </div>
+        <div className="space-y-2 mb-4 p-3 rounded-lg bg-secondary/30 border border-border">
+          <Input placeholder="Question users might ask..." value={newKb.question}
+            onChange={e => setNewKb(k => ({ ...k, question: e.target.value }))} className="bg-secondary border-border" />
+          <Textarea placeholder="The answer the AI should give..." value={newKb.answer}
+            onChange={e => setNewKb(k => ({ ...k, answer: e.target.value }))} className="bg-secondary border-border min-h-[60px]" />
+          <div className="flex gap-2">
+            <Input placeholder="Category (e.g. shipping)" value={newKb.category}
+              onChange={e => setNewKb(k => ({ ...k, category: e.target.value }))} className="bg-secondary border-border flex-1" />
+            <Button size="sm" className="gradient-gold text-primary-foreground" onClick={addKbEntry}>Add</Button>
+          </div>
+        </div>
+        <div className="space-y-2 max-h-64 overflow-y-auto">
+          {kb.map(e => (
+            <div key={e.id} className="bg-secondary/30 rounded-lg p-3 space-y-1">
+              <div className="flex items-center justify-between gap-2">
+                <Badge variant="outline" className="text-[10px] border-blue-500/30 text-blue-400">{e.category}</Badge>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" className="h-6 text-[10px]" onClick={() => toggleKb(e)}>
+                    {e.active ? "Disable" : "Enable"}
+                  </Button>
+                  <Button size="sm" variant="destructive" className="h-6 text-[10px]" onClick={() => deleteKb(e.id)}>Delete</Button>
+                </div>
+              </div>
+              <p className="text-xs font-medium text-foreground">Q: {e.question}</p>
+              <p className="text-xs text-muted-foreground">A: {e.answer}</p>
+            </div>
+          ))}
+          {kb.length === 0 && <p className="text-center text-xs text-muted-foreground py-4">No knowledge entries yet.</p>}
+        </div>
+      </div>
+
 
       {/* User Feedback */}
       {feedbackLogs.length > 0 && (

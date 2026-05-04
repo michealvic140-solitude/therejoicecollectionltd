@@ -1,10 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://therejoicecollectionltd.lovable.app",
+  "https://id-preview--991679d6-6315-4b67-bd10-e0bd85ffbc68.lovable.app",
+];
+
+function buildCors(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allow = ALLOWED_ORIGINS.includes(origin) ? origin
+    : (origin.endsWith(".lovable.app") || origin.endsWith(".lovableproject.com")) ? origin
+    : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allow,
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Vary": "Origin",
+  };
+}
 
 const SYSTEM_PROMPT = `You are the AI Concierge for "The Rejoice Collection" — a premium luxury fashion e-commerce platform based in Nigeria. You are a REAL, helpful AI assistant similar to Temu's AI assistant.
 
@@ -41,18 +53,36 @@ PLATFORM PAGES:
 Keep responses concise (2-4 sentences for simple questions, more for complex ones). Be helpful, not robotic.`;
 
 serve(async (req) => {
+  const corsHeaders = buildCors(req);
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, userId } = await req.json();
+    const { messages, userId: clientUserId } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // VERIFY JWT — never trust client-supplied userId
+    let userId: string | null = null;
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (token) {
+      const authClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: `Bearer ${token}` } },
+      });
+      const { data: u } = await authClient.auth.getUser(token);
+      if (u?.user) userId = u.user.id;
+    }
+    if (clientUserId && clientUserId !== userId) {
+      // Client tried to spoof another user — ignore the spoofed id, use verified one
+      console.warn("ai-concierge: clientUserId mismatch, using verified", { clientUserId, verified: userId });
+    }
 
     let userContext = "";
     if (userId) {
@@ -143,6 +173,19 @@ serve(async (req) => {
         userContext += `\n- Account Number: ${settingsMap.bank_account_number || "N/A"}`;
         userContext += `\n- Account Name: ${settingsMap.bank_account_name || "N/A"}`;
       }
+    }
+
+    // Pull admin-curated knowledge base entries (apply to all users)
+    const { data: kb } = await supabase
+      .from("ai_knowledge_base")
+      .select("question, answer, category")
+      .eq("active", true)
+      .limit(100);
+    if (kb && kb.length > 0) {
+      userContext += `\n\nADMIN KNOWLEDGE BASE (use these answers when relevant — admin has taught you these):`;
+      kb.forEach((k: any, i: number) => {
+        userContext += `\n${i + 1}. [${k.category || "general"}] Q: ${k.question}\n   A: ${k.answer}`;
+      });
     }
 
     const fullSystemPrompt = SYSTEM_PROMPT + userContext;
