@@ -18,6 +18,7 @@ import { AdminCategoryDiscounts } from "@/components/admin/AdminCategoryDiscount
 import { AdminAnnouncements } from "@/components/admin/AdminAnnouncements";
 import { AdminChats } from "@/components/admin/AdminChats";
 import { AdminAILogs } from "@/components/admin/AdminAILogs";
+import { AdminKnowledgeBase } from "@/components/admin/AdminKnowledgeBase";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { Shield } from "lucide-react";
 import { useEffect, useState } from "react";
