@@ -42,14 +42,39 @@ function Index() {
   }, []);
 
   const wa = settings.whatsapp ? settings.whatsapp.replace(/[^0-9]/g, "") : "";
+  const normalizeUrl = (v?: string) => {
+    if (!v) return "";
+    const t = v.trim();
+    if (!t) return "";
+    if (/^(https?:|mailto:|tel:)/i.test(t)) return t;
+    return `https://${t.replace(/^\/+/, "")}`;
+  };
+  const tiktokHandle = (v?: string) => {
+    if (!v) return "";
+    const t = v.trim().replace(/^@/, "");
+    if (/^https?:/i.test(t)) return t;
+    return `https://www.tiktok.com/@${t}`;
+  };
+  const igHandle = (v?: string) => {
+    if (!v) return "";
+    const t = v.trim().replace(/^@/, "");
+    if (/^https?:/i.test(t)) return t;
+    return `https://www.instagram.com/${t}`;
+  };
+  const fbHandle = (v?: string) => {
+    if (!v) return "";
+    const t = v.trim().replace(/^@/, "");
+    if (/^https?:/i.test(t)) return t;
+    return `https://www.facebook.com/${t}`;
+  };
   const socials = [
     wa && { label: "WhatsApp", icon: "💬", href: `https://wa.me/${wa}` },
-    settings.tiktok && { label: "TikTok", icon: "🎵", href: settings.tiktok },
-    settings.instagram && { label: "Instagram", icon: "📸", href: settings.instagram },
-    settings.facebook && { label: "Facebook", icon: "📘", href: settings.facebook },
-    settings.contact_email && { label: "Email", icon: "✉️", href: `mailto:${settings.contact_email}` },
-    settings.contact_phone && { label: "Call", icon: "📞", href: `tel:${settings.contact_phone}` },
-  ].filter(Boolean) as { label: string; icon: string; href: string }[];
+    settings.tiktok && { label: "TikTok", icon: "🎵", href: tiktokHandle(settings.tiktok) },
+    settings.instagram && { label: "Instagram", icon: "📸", href: igHandle(settings.instagram) },
+    settings.facebook && { label: "Facebook", icon: "📘", href: fbHandle(settings.facebook) },
+    settings.contact_email && { label: "Email", icon: "✉️", href: `mailto:${settings.contact_email.trim()}` },
+    settings.contact_phone && { label: "Call", icon: "📞", href: `tel:${settings.contact_phone.trim().replace(/\s+/g, "")}` },
+  ].filter(Boolean).filter((s: any) => !!s.href) as { label: string; icon: string; href: string }[];
 
   const handleAddToCart = async (id: string) => {
     if (!user) { navigate({ to: "/login" }); return; }

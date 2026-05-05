@@ -114,32 +114,52 @@ export function AIConcierge() {
       });
     }
 
-    // Handle user feedback
+    // Handle user feedback / teach-back — auto-create a draft KB entry for admin review
     if (content.includes("[USER_FEEDBACK]")) {
+      const aiAnswer = cleanTags(content);
       await supabase.from("ai_logs").insert({
         user_id: user.id,
         message: userQuery,
         type: "feedback",
-        metadata: { ai_response: cleanTags(content) },
+        metadata: { ai_response: aiAnswer },
       });
+      // Auto-create KB draft (inactive — admin enables after review)
+      if (aiAnswer && userQuery.length > 5) {
+        await supabase.from("ai_knowledge_base").insert({
+          question: userQuery,
+          answer: aiAnswer,
+          category: "user_teach_back",
+          active: false,
+          created_by: user.id,
+        } as any);
+      }
     }
 
-    // Handle AI asking admin
+    // Handle AI asking admin — also seed an inactive KB stub the admin can fill in
     if (content.includes("[AI_ASKS_ADMIN]")) {
       const adminQuestion = content.split("[AI_ASKS_ADMIN]")[1]?.trim() || "";
       if (adminQuestion) {
+        const { data: logRow } = await supabase.from("ai_logs").insert({
+          user_id: user.id,
+          message: adminQuestion,
+          type: "ai_admin_question",
+          metadata: { user_query: userQuery, admin_question: adminQuestion },
+        }).select("id").single();
         await supabase.from("chats").insert({
           user_id: user.id,
           message: `[AI Question for Admin] Re: "${userQuery}" — AI asks: ${adminQuestion}`,
           is_admin: false,
           is_system: true,
         });
-        await supabase.from("ai_logs").insert({
-          user_id: user.id,
-          message: `AI asks admin: ${adminQuestion} (User query: "${userQuery}")`,
-          type: "ai_admin_question",
-          metadata: { user_query: userQuery, admin_question: adminQuestion },
-        });
+        // Inactive KB stub linked to the log so admin can answer once and teach the AI
+        await supabase.from("ai_knowledge_base").insert({
+          question: userQuery,
+          answer: "",
+          category: "pending_admin_answer",
+          active: false,
+          source_log_id: logRow?.id || null,
+          created_by: user.id,
+        } as any);
       }
     }
   };
