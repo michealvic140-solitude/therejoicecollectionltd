@@ -1,5 +1,7 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useAuth } from "@/contexts/AuthContext";
+import { verifyAdmin } from "@/server/admin.functions";
+import { supabase as supabaseBrowser } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminProducts } from "@/components/admin/AdminProducts";
