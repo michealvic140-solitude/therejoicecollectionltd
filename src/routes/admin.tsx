@@ -96,6 +96,7 @@ function AdminPage() {
     { value: "announcements", label: "Announcements", component: <AdminAnnouncements /> },
     { value: "chats", label: "Chats", component: <AdminChats />, count: counts.chats },
     { value: "ai-logs", label: "AI Logs", component: <AdminAILogs /> },
+    { value: "knowledge-base", label: "Knowledge Base", component: <AdminKnowledgeBase /> },
     { value: "settings", label: "Settings", component: <AdminSettings /> },
   ];
 
