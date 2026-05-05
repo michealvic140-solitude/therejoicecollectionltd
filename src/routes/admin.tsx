@@ -28,6 +28,26 @@ import { supabase } from "@/lib/supabase";
 
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
+  beforeLoad: async () => {
+    // Wait for browser session to hydrate, then verify admin server-side.
+    const { data } = await supabaseBrowser.auth.getUser();
+    if (!data?.user) throw redirect({ to: "/login" });
+    try {
+      const result = await verifyAdmin();
+      if (!result?.isAdmin) throw redirect({ to: "/" });
+    } catch (e: any) {
+      if (e?.isRedirect) throw e;
+      throw redirect({ to: "/" });
+    }
+  },
+  errorComponent: ({ error }) => (
+    <div className="min-h-screen flex items-center justify-center px-4 text-center">
+      <div>
+        <h1 className="font-display text-2xl text-foreground mb-2">Access denied</h1>
+        <p className="text-sm text-muted-foreground">{error?.message || "You don't have permission to view this page."}</p>
+      </div>
+    </div>
+  ),
   head: () => ({
     meta: [
       { title: "Admin — The Rejoice Collection" },
