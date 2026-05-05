@@ -18,6 +18,7 @@ import { AdminCategoryDiscounts } from "@/components/admin/AdminCategoryDiscount
 import { AdminAnnouncements } from "@/components/admin/AdminAnnouncements";
 import { AdminChats } from "@/components/admin/AdminChats";
 import { AdminAILogs } from "@/components/admin/AdminAILogs";
+import { AdminKnowledgeBase } from "@/components/admin/AdminKnowledgeBase";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { Shield } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -95,6 +96,7 @@ function AdminPage() {
     { value: "announcements", label: "Announcements", component: <AdminAnnouncements /> },
     { value: "chats", label: "Chats", component: <AdminChats />, count: counts.chats },
     { value: "ai-logs", label: "AI Logs", component: <AdminAILogs /> },
+    { value: "knowledge-base", label: "Knowledge Base", component: <AdminKnowledgeBase /> },
     { value: "settings", label: "Settings", component: <AdminSettings /> },
   ];
 
